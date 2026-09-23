@@ -1,17 +1,18 @@
 /*
 CREATE TYPE user_role AS ENUM (
-	'Донор',
-	'Врач'
+	'donor',
+	'doctor'
 );
 
 CREATE TYPE gender AS ENUM (
-	'мужской',
-	'женский'
+	'male',
+	'female',
+    'other'
 );
 
-CREATE TYPE admission_status AS ENUM (
-	'допущен',
-	'не допущен'
+CREATE TYPE examination_status AS ENUM (
+	'accepted',
+	'rejected'
 );
 
 CREATE TYPE request_status AS ENUM (
