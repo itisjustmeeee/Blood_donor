@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="001732b0-3d5e-41f1-b03c-1ddab191f205" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/.gitattributes" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/.mvn/wrapper/maven-wrapper.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/database/01_create_types.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/database/02_create_types.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/database/03_create_types.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/mvnw" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/mvnw.cmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/pom.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/src/main/java/org/example/blood_donation_system/Main.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/src/main/java/org/example/blood_donation_system/TestConnection.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/src/main/java/org/example/blood_donation_system/dao/BloodBatchDao.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/src/main/java/org/example/blood_donation_system/dao/BloodGroupDao.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/src/main/java/org/example/blood_donation_system/dao/DonationDao.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/src/main/java/org/example/blood_donation_system/dao/DonationRequestDao.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/src/main/java/org/example/blood_donation_system/dao/DonorDao.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/src/main/java/org/example/blood_donation_system/dao/MedicalExaminationDao.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/src/main/java/org/example/blood_donation_system/db/Databaseconnection.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/src/main/java/org/example/blood_donation_system/model/BloodBatch.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/src/main/java/org/example/blood_donation_system/model/BloodGroup.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/src/main/java/org/example/blood_donation_system/model/Donation.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/src/main/java/org/example/blood_donation_system/model/DonationRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/src/main/java/org/example/blood_donation_system/model/Donor.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/src/main/java/org/example/blood_donation_system/model/MedicalExamination.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/src/main/resources/application.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/blood-donation-system/src/test/java/org/example/blood_donation_system/BloodDonationSystemApplicationTests.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/ConsoleUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/ConsoleUI.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sql_script/PKS_Database.sql" beforeDir="false" afterPath="$PROJECT_DIR$/sql_script/blood_donor.sql" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0" />
+      <entry key="S5" value="1.0000000430805542" />
+      <entry key="S10" value="1.000233622954127" />
+      <entry key="S30" value="1.0894332181017978" />
+      <entry key="S60" value="1.4248232026839218" />
+      <entry key="M2" value="2.010463191631283" />
+      <entry key="M5" value="3.014190594375874" />
+      <entry key="M10" value="3.7449062809381832" />
+      <entry key="M15" value="4.086219517253309" />
+      <entry key="M30" value="4.6261292696766585" />
+      <entry key="H1" value="16.26122821841296" />
+      <entry key="H2" value="118.00873280109357" />
+      <entry key="H4" value="362.22682428510353" />
+      <entry key="D1" value="940.104422039914" />
+      <entry key="W1" value="1108.1760304415527" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.35355339059327373" />
+      <entry key="MS500" value="0.8122523963562355" />
+      <entry key="S2" value="0.9493421209505192" />
+      <entry key="S5" value="0.9794203404724903" />
+      <entry key="S10" value="0.989889684520602" />
+      <entry key="S30" value="1.085879329329411" />
+      <entry key="S60" value="1.422851553430376" />
+      <entry key="M2" value="2.0092882938947207" />
+      <entry key="M5" value="3.013546195340279" />
+      <entry key="M10" value="3.744503090407306" />
+      <entry key="M15" value="4.085923085751239" />
+      <entry key="M30" value="4.625961113292994" />
+      <entry key="H1" value="16.261076086131826" />
+      <entry key="H2" value="118.00843104829922" />
+      <entry key="H4" value="362.2264275672847" />
+      <entry key="D1" value="940.1042638648331" />
+      <entry key="W1" value="1108.1760040992617" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3Jbpqw98dlk90zi7Y4GBoRIteko" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.Main.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "merge__changes",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/kseni/Downloads/University/Progr_corp_systems_5_sem/Blood_donor",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.jshint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.jshint": "",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "project.propCompiler"
+  }
+}]]></component>
+  <component name="RunManager">
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="Blood_donor" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-a203e0a19954-intellij.indexing.shared.core-IU-262.10968.63" />
+        <option value="bundled-js-predefined-d6986cc7102b-4abd2a77f808-JavaScript-IU-262.10968.63" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="001732b0-3d5e-41f1-b03c-1ddab191f205" name="Changes" comment="" />
+      <created>1789939820301</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1789939820301</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>
