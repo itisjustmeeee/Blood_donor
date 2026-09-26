@@ -27,6 +27,16 @@ public class DonorDao {
         }
     }
 
+    public Donor findByPhone(String phone) throws SQLException {
+        try (var connection = DatabaseConnection.getConnection();
+             var statement = connection.prepareStatement(SELECT + " WHERE d.phone=?")) {
+            statement.setString(1, phone);
+            try (var rows = statement.executeQuery()) {
+                return rows.next() ? map(rows) : null;
+            }
+        }
+    }
+
     public List<Donor> findAll() throws SQLException {
         List<Donor> result = new ArrayList<>();
         try (var connection = DatabaseConnection.getConnection();
