@@ -4,6 +4,7 @@ ru\mirea\project\model\Donation.class
 ru\mirea\project\ui\Task.class
 ru\mirea\project\model\BloodBatch.class
 ru\mirea\project\model\Donor.class
+ru\mirea\project\ui\StatisticsExporter.class
 ru\mirea\project\ui\ConsoleUI.class
 ru\mirea\project\ui\MedicalInstitution.class
 ru\mirea\project\dao\DonationRequestDao.class

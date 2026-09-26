@@ -148,7 +148,7 @@ CREATE TABLE donation (
 		CHECK (blood_volume > 0)
 );
 -- вставка значений (тестовые)
-/*
+
 INSERT INTO blood_group (blood_type, rh_factor)
 VALUES
     ('0', '+'),
@@ -159,14 +159,14 @@ VALUES
     ('B', '-'),
     ('AB', '+'),
     ('AB', '-');
-*/
+
 /*
 INSERT INTO donor
     (full_name, birth_date, role, gender, weight, email, phone, password_hash, blood_group_id)
 VALUES
     ('Иванов Иван Иванович', '1995-03-12', 'donor', 'male', 82,
      'ivanov@example.com', '+79990000001',
-     '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', 3),
+     '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', 3);,
 
     ('Петрова Анна Сергеевна', '1998-07-25', 'donor', 'female', 64,
      'petrova@example.com', '+79990000002',
