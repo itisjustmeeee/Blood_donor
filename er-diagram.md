@@ -1,9 +1,8 @@
 # ER-диаграмма базы данных
 
 Диаграмма соответствует текущей схеме из `sql_script/blood_donor.sql`.
-В модели используется `age`, а поля `birth_date` и `phone` отсутствуют.
 
-```mermaid
+```
 erDiagram
     BLOOD_GROUP ||--o{ DONOR : "имеет"
     BLOOD_GROUP ||--o{ BLOOD_BATCH : "для группы"
@@ -68,7 +67,4 @@ erDiagram
     }
 ```
 
-Ограничение `UNIQUE` на `medical_examination.request_id` означает, что у
-одной заявки может быть не более одного обследования. Ограничение
-`UNIQUE` на `donation.examination_id` реализует правило «одно положительное
-обследование — одна донация».
+Ограничение `UNIQUE` на `medical_examination.request_id` означает, что у одной заявки может быть не более одного обследования. Ограничение `UNIQUE` на `donation.examination_id` реализует правило «одно положительное обследование — одна донация».

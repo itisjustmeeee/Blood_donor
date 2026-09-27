@@ -26,8 +26,8 @@ public final class DatabaseInitializer {
 
     private static void ensureDatabase() throws SQLException {
         try (Connection connection = DatabaseManager.getServerConnection();
-             var check = connection.prepareStatement(
-                     "SELECT 1 FROM pg_database WHERE datname=?")) {
+                var check = connection.prepareStatement(
+                        "SELECT 1 FROM pg_database WHERE datname=?")) {
             check.setString(1, DatabaseManager.DATABASE);
             try (var rows = check.executeQuery()) {
                 if (rows.next()) {
@@ -43,7 +43,7 @@ public final class DatabaseInitializer {
     private static boolean schemaExists(Connection connection) throws SQLException {
         try (var statement = connection.prepareStatement(
                 "SELECT to_regclass('public.donor') IS NOT NULL");
-             var rows = statement.executeQuery()) {
+                var rows = statement.executeQuery()) {
             rows.next();
             return rows.getBoolean(1);
         }

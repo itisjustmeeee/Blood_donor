@@ -22,50 +22,51 @@ public class DonationRepository {
                 END $$;
                 """;
         try (var connection = ru.mirea.project.util.DatabaseManager.getConnection();
-             var statement = connection.prepareStatement(sql)) {
+                var statement = connection.prepareStatement(sql)) {
             statement.execute();
         }
     }
 
     public Donation create(int requestId, int examinationId, int batchId,
-                           java.time.LocalDate donationDate, int bloodVolume,
-                           String donationType, String result) throws SQLException {
+            java.time.LocalDate donationDate, int bloodVolume,
+            String donationType, String result) throws SQLException {
         if (bloodVolume <= 0 || bloodVolume > 450) {
             throw new SQLException("Объём донации должен быть от 1 до 450 мл.");
         }
         try (var connection = ru.mirea.project.util.DatabaseManager.getConnection();
-             var batchStatement = connection.prepareStatement("""
-                     SELECT b.total_volume, b.status::text,
-                            COALESCE((SELECT SUM(d.blood_volume) FROM donation d
-                                      WHERE d.batch_id=b.batch_id), 0)
-                     FROM blood_batch b WHERE b.batch_id=? FOR UPDATE
-                     """);
-             var validation = connection.prepareStatement("""
-                     SELECT EXISTS (
-                         SELECT 1
-                         FROM medical_examination e
-                         JOIN donation_request r ON r.request_id=e.request_id
-                         WHERE e.examination_id=? AND r.donor_id=(
-                             SELECT donor_id FROM donation_request WHERE request_id=?
-                         ) AND e.admission_status='accepted'::admission_status
-                     )
-                     """);
-             var insert = connection.prepareStatement("""
-                     INSERT INTO donation(examination_id,batch_id,donation_date,blood_volume,donation_type,result)
-                     VALUES (?, ?, ?, ?, ?::donation_type, ?::donation_result)
-                     RETURNING donation_id
-                     """);
-             var updateBatch = connection.prepareStatement("""
-                     UPDATE blood_batch
-                     SET status='reserved'::batch_status
-                     WHERE batch_id=? AND
-                           (SELECT COALESCE(SUM(d.blood_volume), 0)
-                            FROM donation d WHERE d.batch_id=?) >= total_volume
-                     """)) {
+                var batchStatement = connection.prepareStatement("""
+                        SELECT b.total_volume, b.status::text,
+                               COALESCE((SELECT SUM(d.blood_volume) FROM donation d
+                                         WHERE d.batch_id=b.batch_id), 0)
+                        FROM blood_batch b WHERE b.batch_id=? FOR UPDATE
+                        """);
+                var validation = connection.prepareStatement("""
+                        SELECT EXISTS (
+                            SELECT 1
+                            FROM medical_examination e
+                            JOIN donation_request r ON r.request_id=e.request_id
+                            WHERE e.examination_id=? AND r.donor_id=(
+                                SELECT donor_id FROM donation_request WHERE request_id=?
+                            ) AND e.admission_status='accepted'::admission_status
+                        )
+                        """);
+                var insert = connection.prepareStatement("""
+                        INSERT INTO donation(examination_id,batch_id,donation_date,blood_volume,donation_type,result)
+                        VALUES (?, ?, ?, ?, ?::donation_type, ?::donation_result)
+                        RETURNING donation_id
+                        """);
+                var updateBatch = connection.prepareStatement("""
+                        UPDATE blood_batch
+                        SET status='reserved'::batch_status
+                        WHERE batch_id=? AND
+                              (SELECT COALESCE(SUM(d.blood_volume), 0)
+                               FROM donation d WHERE d.batch_id=?) >= total_volume
+                        """)) {
             connection.setAutoCommit(false);
             batchStatement.setInt(1, batchId);
             try (var rows = batchStatement.executeQuery()) {
-                if (!rows.next()) throw new SQLException("Партия крови не найдена.");
+                if (!rows.next())
+                    throw new SQLException("Партия крови не найдена.");
                 int totalVolume = rows.getInt(1);
                 String status = rows.getString(2);
                 int usedVolume = rows.getInt(3);
@@ -120,12 +121,13 @@ public class DonationRepository {
                 """;
         List<Donation> result = new ArrayList<>();
         try (var connection = DatabaseManager.getConnection();
-             var statement = connection.prepareStatement(sql)) {
+                var statement = connection.prepareStatement(sql)) {
             statement.setInt(1, donorId);
             try (var rows = statement.executeQuery()) {
-                while (rows.next()) result.add(new Donation(rows.getInt(1), rows.getInt(2),
-                        rows.getInt(3), rows.getDate(4).toLocalDate(), rows.getInt(5),
-                        rows.getString(6), rows.getString(7), rows.getString(8), rows.getString(9)));
+                while (rows.next())
+                    result.add(new Donation(rows.getInt(1), rows.getInt(2),
+                            rows.getInt(3), rows.getDate(4).toLocalDate(), rows.getInt(5),
+                            rows.getString(6), rows.getString(7), rows.getString(8), rows.getString(9)));
             }
         }
         return result;
@@ -145,11 +147,12 @@ public class DonationRepository {
                 """;
         List<Donation> result = new ArrayList<>();
         try (var connection = DatabaseManager.getConnection();
-             var statement = connection.prepareStatement(sql);
-             var rows = statement.executeQuery()) {
-            while (rows.next()) result.add(new Donation(rows.getInt(1), rows.getInt(2),
-                    rows.getInt(3), rows.getDate(4).toLocalDate(), rows.getInt(5),
-                    rows.getString(6), rows.getString(7), rows.getString(8), rows.getString(9)));
+                var statement = connection.prepareStatement(sql);
+                var rows = statement.executeQuery()) {
+            while (rows.next())
+                result.add(new Donation(rows.getInt(1), rows.getInt(2),
+                        rows.getInt(3), rows.getDate(4).toLocalDate(), rows.getInt(5),
+                        rows.getString(6), rows.getString(7), rows.getString(8), rows.getString(9)));
         }
         return result;
     }
@@ -161,6 +164,3 @@ public class DonationRepository {
                 .orElseThrow(() -> new SQLException("Созданная донация не найдена."));
     }
 }
-
-
-

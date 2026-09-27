@@ -25,7 +25,7 @@ public class MedicalExaminationRepository {
                 VALUES (?, ?, ?, 'pending'::admission_status) RETURNING examination_id
                 """;
         try (var connection = DatabaseManager.getConnection();
-             var statement = connection.prepareStatement(sql)) {
+                var statement = connection.prepareStatement(sql)) {
             statement.setInt(1, requestId);
             statement.setDate(2, Date.valueOf(date));
             statement.setBigDecimal(3, hemoglobin);
@@ -37,10 +37,10 @@ public class MedicalExaminationRepository {
     }
 
     public void updateResult(int id, BigDecimal hemoglobin, String pressure,
-                             String conclusion, String status) throws SQLException {
+            String conclusion, String status) throws SQLException {
         String sql = "UPDATE medical_examination SET hemoglobin=?,blood_pressure=?,conclusion=?,admission_status=?::admission_status WHERE examination_id=?";
         try (var connection = DatabaseManager.getConnection();
-             var statement = connection.prepareStatement(sql)) {
+                var statement = connection.prepareStatement(sql)) {
             statement.setBigDecimal(1, hemoglobin);
             statement.setString(2, pressure);
             statement.setString(3, conclusion);
@@ -71,12 +71,12 @@ public class MedicalExaminationRepository {
 
     public void updateDate(int examinationId, LocalDate date) throws SQLException {
         try (var connection = DatabaseManager.getConnection();
-             var requestIdStatement = connection.prepareStatement(
-                     "SELECT request_id FROM medical_examination WHERE examination_id=?");
-             var examinationStatement = connection.prepareStatement(
-                     "UPDATE medical_examination SET examination_date=? WHERE examination_id=?");
-             var requestStatement = connection.prepareStatement(
-                     "UPDATE donation_request SET donation_date=? WHERE request_id=?")) {
+                var requestIdStatement = connection.prepareStatement(
+                        "SELECT request_id FROM medical_examination WHERE examination_id=?");
+                var examinationStatement = connection.prepareStatement(
+                        "UPDATE medical_examination SET examination_date=? WHERE examination_id=?");
+                var requestStatement = connection.prepareStatement(
+                        "UPDATE donation_request SET donation_date=? WHERE request_id=?")) {
             connection.setAutoCommit(false);
             requestIdStatement.setInt(1, examinationId);
             int requestId;
@@ -98,14 +98,14 @@ public class MedicalExaminationRepository {
 
     public void deleteWithRequest(int examinationId) throws SQLException {
         try (var connection = DatabaseManager.getConnection();
-             var requestIdStatement = connection.prepareStatement(
-                     "SELECT request_id FROM medical_examination WHERE examination_id=?");
-             var donationStatement = connection.prepareStatement(
-                     "SELECT EXISTS (SELECT 1 FROM donation WHERE examination_id=?)");
-             var deleteExamination = connection.prepareStatement(
-                     "DELETE FROM medical_examination WHERE examination_id=?");
-             var deleteRequest = connection.prepareStatement(
-                     "DELETE FROM donation_request WHERE request_id=?")) {
+                var requestIdStatement = connection.prepareStatement(
+                        "SELECT request_id FROM medical_examination WHERE examination_id=?");
+                var donationStatement = connection.prepareStatement(
+                        "SELECT EXISTS (SELECT 1 FROM donation WHERE examination_id=?)");
+                var deleteExamination = connection.prepareStatement(
+                        "DELETE FROM medical_examination WHERE examination_id=?");
+                var deleteRequest = connection.prepareStatement(
+                        "DELETE FROM donation_request WHERE request_id=?")) {
             connection.setAutoCommit(false);
             requestIdStatement.setInt(1, examinationId);
             int requestId;
@@ -135,12 +135,14 @@ public class MedicalExaminationRepository {
     private List<MedicalExamination> find(String sql, Integer... parameters) throws SQLException {
         List<MedicalExamination> result = new ArrayList<>();
         try (var connection = DatabaseManager.getConnection();
-             var statement = connection.prepareStatement(sql)) {
-            for (int i = 0; i < parameters.length; i++) statement.setInt(i + 1, parameters[i]);
+                var statement = connection.prepareStatement(sql)) {
+            for (int i = 0; i < parameters.length; i++)
+                statement.setInt(i + 1, parameters[i]);
             try (var rows = statement.executeQuery()) {
-                while (rows.next()) result.add(new MedicalExamination(rows.getInt(1), rows.getInt(2),
-                        rows.getDate(3).toLocalDate(), rows.getObject(4, BigDecimal.class),
-                        rows.getString(5), rows.getString(6), rows.getString(7), rows.getString(8)));
+                while (rows.next())
+                    result.add(new MedicalExamination(rows.getInt(1), rows.getInt(2),
+                            rows.getDate(3).toLocalDate(), rows.getObject(4, BigDecimal.class),
+                            rows.getString(5), rows.getString(6), rows.getString(7), rows.getString(8)));
             }
         }
         return result;

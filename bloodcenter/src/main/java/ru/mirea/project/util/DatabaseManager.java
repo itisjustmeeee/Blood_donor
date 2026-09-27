@@ -29,4 +29,3 @@ public final class DatabaseManager {
         return value == null || value.isBlank() ? defaultValue : value;
     }
 }
-

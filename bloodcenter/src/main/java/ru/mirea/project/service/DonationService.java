@@ -20,7 +20,7 @@ public class DonationService {
     private final BloodBatchRepository batchDao;
 
     public DonationService(DonationRequestRepository requestDao, MedicalExaminationRepository examinationDao,
-                           DonationRepository donationDao, BloodBatchRepository batchDao) {
+            DonationRepository donationDao, BloodBatchRepository batchDao) {
         this.requestDao = requestDao;
         this.examinationDao = examinationDao;
         this.donationDao = donationDao;
@@ -44,9 +44,11 @@ public class DonationService {
             throw new DonationEligibilityException("Необходимо указать гемоглобин для записи на обследование.");
         }
         BigDecimal min = "male".equalsIgnoreCase(donor.gender())
-                ? BigDecimal.valueOf(130) : BigDecimal.valueOf(120);
+                ? BigDecimal.valueOf(130)
+                : BigDecimal.valueOf(120);
         BigDecimal max = "male".equalsIgnoreCase(donor.gender())
-                ? BigDecimal.valueOf(160) : BigDecimal.valueOf(140);
+                ? BigDecimal.valueOf(160)
+                : BigDecimal.valueOf(140);
         if (hemoglobin.compareTo(min) < 0 || hemoglobin.compareTo(max) > 0) {
             throw new DonationEligibilityException("Гемоглобин вне нормы: "
                     + min + "-" + max + " г/л.");
@@ -81,8 +83,8 @@ public class DonationService {
     }
 
     public Donation process(DonationRequest request, MedicalExamination examination,
-                            BloodBatch batch, int volume, String type, String result,
-                            Donor donor) throws SQLException, BusinessException {
+            BloodBatch batch, int volume, String type, String result,
+            Donor donor) throws SQLException, BusinessException {
         validateDonor(donor);
         if (!"accepted".equalsIgnoreCase(examination.admissionStatus())) {
             throw new DonationEligibilityException("К донации допускаются только после положительного обследования.");
