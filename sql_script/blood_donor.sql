@@ -56,15 +56,26 @@ CREATE TABLE blood_group (
 		UNIQUE (blood_type, rh_factor)
 );
 
+INSERT INTO blood_group (blood_type, rh_factor)
+VALUES
+    ('0', '+'),
+    ('0', '-'),
+    ('A', '+'),
+    ('A', '-'),
+    ('B', '+'),
+    ('B', '-'),
+    ('AB', '+'),
+    ('AB', '-')
+ON CONFLICT (blood_type, rh_factor) DO NOTHING;
+
 CREATE TABLE donor (
 	donor_id SERIAL PRIMARY KEY,
 	full_name VARCHAR(150) NOT NULL,
-	birth_date DATE NOT NULL,
+	age INT NOT NULL,
 	role user_role NOT NULL,
 	gender gender NOT NULL,
 	weight INT NOT NULL,
 	email VARCHAR(100) NOT NULL UNIQUE,
-	phone VARCHAR(20) NOT NULL UNIQUE,
 	password_hash VARCHAR(100) NOT NULL,
 	blood_group_id INT NOT NULL,
 
@@ -73,10 +84,10 @@ CREATE TABLE donor (
 		REFERENCES blood_group(blood_group_id),
 
 	CONSTRAINT chk_donor_weight
-		CHECK (weight > 0),
+		CHECK (weight >= 50),
 
-	CONSTRAINT chk_donor_birth_date
-		CHECK (birth_date < CURRENT_DATE)
+	CONSTRAINT chk_donor_age
+		CHECK (age >= 18)
 );
 
 CREATE TABLE donation_request (
@@ -127,6 +138,24 @@ CREATE TABLE blood_batch (
 		CHECK (expiration_date > preparation_date)
 );
 
+INSERT INTO blood_batch
+    (blood_group_id, batch_number, preparation_date, expiration_date, total_volume, status)
+SELECT bg.blood_group_id, seed.batch_number, CURRENT_DATE, CURRENT_DATE + 30,
+       450, 'available'
+FROM (VALUES
+    ('0', '+', 'AUTO-0P'),
+    ('0', '-', 'AUTO-0M'),
+    ('A', '+', 'AUTO-AP'),
+    ('A', '-', 'AUTO-AM'),
+    ('B', '+', 'AUTO-BP'),
+    ('B', '-', 'AUTO-BM'),
+    ('AB', '+', 'AUTO-ABP'),
+    ('AB', '-', 'AUTO-ABM')
+) AS seed(blood_type, rh_factor, batch_number)
+JOIN blood_group bg
+  ON bg.blood_type=seed.blood_type AND bg.rh_factor=seed.rh_factor
+ON CONFLICT (batch_number) DO NOTHING;
+
 CREATE TABLE donation (
 	donation_id SERIAL PRIMARY KEY,
 	examination_id INT NOT NULL UNIQUE,
@@ -145,7 +174,7 @@ CREATE TABLE donation (
 		REFERENCES blood_batch(batch_id),
 
 	CONSTRAINT chk_donation_volume
-		CHECK (blood_volume > 0)
+		CHECK (blood_volume > 0 AND blood_volume <= 450)
 );
 -- вставка значений (тестовые)
 
@@ -162,38 +191,38 @@ VALUES
 
 /*
 INSERT INTO donor
-    (full_name, birth_date, role, gender, weight, email, phone, password_hash, blood_group_id)
+    (full_name, age, role, gender, weight, email, password_hash, blood_group_id)
 VALUES
-    ('Иванов Иван Иванович', '1995-03-12', 'donor', 'male', 82,
-     'ivanov@example.com', '+79990000001',
+    ('Иванов Иван Иванович', 31, 'donor', 'male', 82,
+     'ivanov@example.com',
      '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', 3);,
 
-    ('Петрова Анна Сергеевна', '1998-07-25', 'donor', 'female', 64,
-     'petrova@example.com', '+79990000002',
+    ('Петрова Анна Сергеевна', 28, 'donor', 'female', 64,
+     'petrova@example.com',
      '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', 1),
 
-    ('Сидоров Алексей Павлович', '1992-11-08', 'donor', 'male', 90,
-     'sidorov@example.com', '+79990000003',
+    ('Сидоров Алексей Павлович', 33, 'donor', 'male', 90,
+     'sidorov@example.com',
      '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', 3),
 
-    ('Кузнецова Мария Андреевна', '2000-01-17', 'donor', 'female', 58,
-     'kuznetsova@example.com', '+79990000004',
+    ('Кузнецова Мария Андреевна', 26, 'donor', 'female', 58,
+     'kuznetsova@example.com',
      '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', 5),
 
-    ('Смирнов Дмитрий Олегович', '1989-06-30', 'donor', 'male', 76,
-     'smirnov@example.com', '+79990000005',
+    ('Смирнов Дмитрий Олегович', 37, 'donor', 'male', 76,
+     'smirnov@example.com',
      '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', 1),
 
-    ('Волкова Елена Игоревна', '1996-09-14', 'donor', 'female', 61,
-     'volkova@example.com', '+79990000006',
+    ('Волкова Елена Игоревна', 30, 'donor', 'female', 61,
+     'volkova@example.com',
      '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', 7),
 
-    ('Орлов Максим Романович', '1994-02-21', 'donor', 'male', 85,
-     'orlov@example.com', '+79990000007',
+    ('Орлов Максим Романович', 32, 'donor', 'male', 85,
+     'orlov@example.com',
      '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', 3),
 
-    ('Морозова Ольга Викторовна', '1999-12-05', 'donor', 'female', 63,
-     'morozova@example.com', '+79990000008',
+    ('Морозова Ольга Викторовна', 27, 'donor', 'female', 63,
+     'morozova@example.com',
      '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', 5);
 */
 /*

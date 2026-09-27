@@ -5,34 +5,34 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="001732b0-3d5e-41f1-b03c-1ddab191f205" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/Blood_donor.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources/6b291023-b40d-4515-ba1a-623aa02ed82c.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources/6b291023-b40d-4515-ba1a-623aa02ed82c/storage_v2/_src_/database/blood_donor.4ZOXtA.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources/6b291023-b40d-4515-ba1a-623aa02ed82c/storage_v2/_src_/database/blood_donor.4ZOXtA/schema/information_schema.FNRwLQ.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources/6b291023-b40d-4515-ba1a-623aa02ed82c/storage_v2/_src_/database/blood_donor.4ZOXtA/schema/pg_catalog.0S1ZNQ.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources/6b291023-b40d-4515-ba1a-623aa02ed82c/storage_v2/_src_/database/blood_donor.4ZOXtA/schema/public.abK9xQ.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/data_source_mapping.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/sqldialects.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/bloodcenter/reports/donor_1_20260926_225439.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/bloodcenter/reports/donor_1_20260926_225520.xlsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/StatisticsExporter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/bloodcenter/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/bloodcenter/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/image_2026-09-13_12-42-12.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/dao/BloodGroupDao.java" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/dao/BloodGroupDao.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/dao/DonationDao.java" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/dao/DonationDao.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/dao/DonorDao.java" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/dao/DonorDao.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/db/DatabaseConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/db/DatabaseConnection.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/reports/donor_1_20260926_225439.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/reports/donor_1_20260926_225520.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/TestConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/TestConnection.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/dao/BloodBatchDao.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/dao/BloodGroupDao.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/dao/DonationDao.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/dao/DonationRequestDao.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/dao/DonorDao.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/dao/MedicalExaminationDao.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/db/DatabaseConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/util/DatabaseManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/model/Donor.java" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/model/Donor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/BloodRequest.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/ConsoleUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/ConsoleUI.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/DonationAppointment.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/MedicalExamination.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/MedicalInstitution.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/Notification.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/Role.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/StatisticsExporter.java" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/util/ExcelExporter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/Task.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/User.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/sql_script/blood_donor.sql" beforeDir="false" afterPath="$PROJECT_DIR$/sql_script/blood_donor.sql" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -54,61 +54,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0505248665387033" />
-      <entry key="MS500" value="2.9582282087594667" />
-      <entry key="S2" value="6.074428777339584" />
-      <entry key="S5" value="10.059228963237315" />
-      <entry key="S10" value="18.875681692547158" />
-      <entry key="S30" value="46.581630005099576" />
-      <entry key="S60" value="83.76242260836302" />
-      <entry key="M2" value="152.15328237832625" />
-      <entry key="M5" value="295.0481163164833" />
-      <entry key="M10" value="478.81295496066053" />
-      <entry key="M15" value="626.938576608157" />
-      <entry key="M30" value="914.5947303856835" />
-      <entry key="H1" value="1176.3494473523845" />
-      <entry key="H2" value="1422.9446520094152" />
-      <entry key="H4" value="1743.0089408072013" />
-      <entry key="D1" value="2459.5681736649417" />
-      <entry key="W1" value="2675.071751377465" />
+      <entry key="MS100" value="1.000001713417962" />
+      <entry key="MS500" value="1.2873877873768345" />
+      <entry key="S2" value="7.435469676547589" />
+      <entry key="S5" value="15.881541415965522" />
+      <entry key="S10" value="21.564635418539886" />
+      <entry key="S30" value="35.40270031539025" />
+      <entry key="S60" value="49.28112979407309" />
+      <entry key="M2" value="61.69438612626537" />
+      <entry key="M5" value="89.13189869390938" />
+      <entry key="M10" value="190.1240595196886" />
+      <entry key="M15" value="320.8642087180149" />
+      <entry key="M30" value="694.2432983798158" />
+      <entry key="H1" value="1273.6656060457628" />
+      <entry key="H2" value="2224.5202040505947" />
+      <entry key="H4" value="3533.977373076147" />
+      <entry key="D1" value="6296.652587654846" />
+      <entry key="W1" value="7147.162078931592" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
       <entry key="MS500" value="0.0" />
       <entry key="S2" value="0.0" />
-      <entry key="S5" value="2.391358443369119E-236" />
-      <entry key="S10" value="1.5464017729454952E-118" />
-      <entry key="S30" value="5.3675256796020965E-40" />
-      <entry key="S60" value="2.3174570713126282E-20" />
-      <entry key="M2" value="1.5585661435876797E-10" />
-      <entry key="M5" value="1.5860267668410923E-4" />
-      <entry key="M10" value="0.01985471531018254" />
-      <entry key="M15" value="0.10351553818084863" />
-      <entry key="M30" value="0.5514883662180686" />
-      <entry key="H1" value="1.2830167335529497" />
-      <entry key="H2" value="1.960686621415525" />
-      <entry key="H4" value="2.4249250542661396" />
-      <entry key="D1" value="2.89539804358743" />
-      <entry key="W1" value="2.9848270879316106" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="3.665664457889186E-253" />
+      <entry key="S60" value="6.056210849221655E-127" />
+      <entry key="M2" value="7.967459826542973E-64" />
+      <entry key="M5" value="7.651531495726067E-26" />
+      <entry key="M10" value="4.360964919526112E-13" />
+      <entry key="M15" value="8.11866890324604E-9" />
+      <entry key="M30" value="1.5444576290688826E-4" />
+      <entry key="H1" value="0.021470993581861476" />
+      <entry key="H2" value="0.2536402054031298" />
+      <entry key="H4" value="0.8721742812868616" />
+      <entry key="D1" value="2.4417007457333217" />
+      <entry key="W1" value="2.9130335453785956" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="1.0149398296402385" />
-      <entry key="MS500" value="2.9382833278557103" />
-      <entry key="S2" value="6.064180229898641" />
-      <entry key="S5" value="10.052533084872703" />
-      <entry key="S10" value="18.86946419800107" />
-      <entry key="S30" value="46.57651750847691" />
-      <entry key="S60" value="83.75785252340145" />
-      <entry key="M2" value="152.14915303827036" />
-      <entry key="M5" value="295.0450687662999" />
-      <entry key="M10" value="478.8300654484227" />
-      <entry key="M15" value="627.0393885434485" />
-      <entry key="M30" value="915.1434982691931" />
-      <entry key="H1" value="1177.630170395751" />
-      <entry key="H2" value="1424.903651321254" />
-      <entry key="H4" value="1745.4326760771494" />
-      <entry key="D1" value="2462.463252797724" />
-      <entry key="W1" value="2678.0565278923564" />
+      <entry key="MS100" value="0.9726566043127268" />
+      <entry key="MS500" value="1.2800737021803579" />
+      <entry key="S2" value="7.424405160598236" />
+      <entry key="S5" value="15.872150316983106" />
+      <entry key="S10" value="21.558280430442196" />
+      <entry key="S30" value="35.399250722982934" />
+      <entry key="S60" value="49.27874047505981" />
+      <entry key="M2" value="61.692894410305" />
+      <entry key="M5" value="89.13103152623283" />
+      <entry key="M10" value="190.12311826886634" />
+      <entry key="M15" value="320.8631398669162" />
+      <entry key="M30" value="694.2422766007986" />
+      <entry key="H1" value="1273.6859531926075" />
+      <entry key="H2" value="2224.7727210736907" />
+      <entry key="H4" value="3534.8484634348165" />
+      <entry key="D1" value="6299.093858065297" />
+      <entry key="W1" value="7150.075038279977" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -130,7 +130,7 @@
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;fix&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/rovian/Blood_donor&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
