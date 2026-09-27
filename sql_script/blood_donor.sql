@@ -176,19 +176,6 @@ CREATE TABLE donation (
 	CONSTRAINT chk_donation_volume
 		CHECK (blood_volume > 0 AND blood_volume <= 450)
 );
--- вставка значений (тестовые)
-
-INSERT INTO blood_group (blood_type, rh_factor)
-VALUES
-    ('0', '+'),
-    ('0', '-'),
-    ('A', '+'),
-    ('A', '-'),
-    ('B', '+'),
-    ('B', '-'),
-    ('AB', '+'),
-    ('AB', '-');
-
 /*
 INSERT INTO donor
     (full_name, age, role, gender, weight, email, password_hash, blood_group_id)

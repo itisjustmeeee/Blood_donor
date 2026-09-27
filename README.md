@@ -6,17 +6,43 @@
 
 ## Подготовка базы данных
 
-1. Создайте базу PostgreSQL `blood_donor`.
-2. Выполните файл `sql_script/blood_donor.sql`.
-3. Проверьте параметры подключения в
-   `bloodcenter/src/main/java/ru/mirea/project/util/DatabaseManager.java`.
+1. Установите PostgreSQL и запомните пароль пользователя, созданного при
+   установке.
+2. Настройте параметры подключения через переменные окружения
+   `BLOOD_DB_HOST`, `BLOOD_DB_PORT`, `BLOOD_DB_NAME`, `BLOOD_DB_USER` и
+   `BLOOD_DB_PASSWORD`.
+3. Запустите приложение: оно прочитает схему из
+   `sql_script/blood_donor.sql` и создаст базу при наличии права `CREATEDB`.
 
-Подключение повторяет исходную конфигурацию:
+Например, в PowerShell перед запуском:
 
-```text
-jdbc:postgresql://localhost:5432/blood_donor
-user: postgres
+```powershell
+$env:BLOOD_DB_HOST = "localhost"
+$env:BLOOD_DB_PORT = "5432"
+$env:BLOOD_DB_NAME = "blood_donor"
+$env:BLOOD_DB_USER = "postgres"
+$env:BLOOD_DB_PASSWORD = "пароль, указанный при установке PostgreSQL"
 ```
+
+Если пароль неизвестен, его можно изменить в pgAdmin: **Login/Group Roles** →
+нужный пользователь (обычно `postgres`) → **Properties** → **Definition** →
+**Password**. Через SQL это выполняется командой под администратором:
+
+```sql
+ALTER USER postgres WITH PASSWORD 'новый_пароль';
+```
+
+Вместо `postgres` можно создать отдельного пользователя для приложения:
+
+```sql
+CREATE USER blood_app WITH PASSWORD 'пароль_приложения';
+ALTER USER blood_app CREATEDB;
+```
+
+После этого укажите `blood_app` и его пароль в `BLOOD_DB_USER` и
+`BLOOD_DB_PASSWORD`. Параметры больше не зашиты в
+`DatabaseManager.java`; это позволяет каждому разработчику использовать
+свои учётные данные.
 
 ## Запуск
 
@@ -28,10 +54,9 @@ mvn exec:java
 ```
 
 При запуске приложение проверяет наличие базы `blood_donor` в PostgreSQL.
-Если базы нет, она создаётся автоматически, после чего создаются типы и
-таблицы приложения. Для этого пользователь PostgreSQL должен иметь право
-`CREATEDB`. При повторном запуске существующая база и схема не создаются
-заново.
+Если базы нет, она создаётся автоматически, после чего инициализатор читает
+типы, таблицы и начальные партии из `sql_script/blood_donor.sql`. При
+повторном запуске существующая база и схема не создаются заново.
 
 Если в терминале IntelliJ IDEA русские символы отображаются как `����`,
 проверьте настройку **Settings | Editor | General | Console | Default Encoding**:
@@ -86,3 +111,5 @@ mvn exec:java
 поле `age`, а регистрация пользователей младше 18 лет запрещена. При запуске
 существующей базы приложение переносит значение из старого `birth_date` в
 возраст и удаляет устаревшее поле.
+
+Актуальная ER-диаграмма находится в [`er-diagram.md`](er-diagram.md).

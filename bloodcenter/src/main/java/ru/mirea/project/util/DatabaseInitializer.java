@@ -1,8 +1,13 @@
 package ru.mirea.project.util;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.regex.Pattern;
 
 public final class DatabaseInitializer {
     private DatabaseInitializer() {
@@ -45,125 +50,37 @@ public final class DatabaseInitializer {
     }
 
     private static void createSchema(Connection connection) throws SQLException {
-        String[] statements = {
-                """
-                DO $$ BEGIN
-                    CREATE TYPE user_role AS ENUM ('donor', 'doctor');
-                EXCEPTION WHEN duplicate_object THEN NULL;
-                END $$;
-                """,
-                """
-                DO $$ BEGIN
-                    CREATE TYPE gender AS ENUM ('male', 'female', 'other');
-                EXCEPTION WHEN duplicate_object THEN NULL;
-                END $$;
-                """,
-                """
-                DO $$ BEGIN
-                    CREATE TYPE admission_status AS ENUM ('pending', 'accepted', 'rejected');
-                EXCEPTION WHEN duplicate_object THEN NULL;
-                END $$;
-                """,
-                """
-                DO $$ BEGIN
-                    CREATE TYPE request_status AS ENUM ('created', 'confirmed', 'completed', 'cancelled');
-                EXCEPTION WHEN duplicate_object THEN NULL;
-                END $$;
-                """,
-                """
-                DO $$ BEGIN
-                    CREATE TYPE donation_type AS ENUM ('whole_blood', 'plasma', 'platelets');
-                EXCEPTION WHEN duplicate_object THEN NULL;
-                END $$;
-                """,
-                """
-                DO $$ BEGIN
-                    CREATE TYPE batch_status AS ENUM ('available', 'reserved', 'used', 'expired', 'disposed');
-                EXCEPTION WHEN duplicate_object THEN NULL;
-                END $$;
-                """,
-                """
-                DO $$ BEGIN
-                    CREATE TYPE donation_result AS ENUM ('successful', 'unsuccessful');
-                EXCEPTION WHEN duplicate_object THEN NULL;
-                END $$;
-                """,
-                """
-                CREATE TABLE IF NOT EXISTS blood_group (
-                    blood_group_id SERIAL PRIMARY KEY,
-                    blood_type VARCHAR(2) NOT NULL,
-                    rh_factor CHAR(1) NOT NULL,
-                    CONSTRAINT chk_blood_type CHECK (blood_type IN ('A', 'B', 'AB', '0')),
-                    CONSTRAINT chk_rh_factor CHECK (rh_factor IN ('+', '-')),
-                    CONSTRAINT uq_blood_group UNIQUE (blood_type, rh_factor)
-                )
-                """,
-                """
-                CREATE TABLE IF NOT EXISTS donor (
-                    donor_id SERIAL PRIMARY KEY,
-                    full_name VARCHAR(150) NOT NULL,
-                    age INT NOT NULL,
-                    role user_role NOT NULL,
-                    gender gender NOT NULL,
-                    weight INT NOT NULL,
-                    email VARCHAR(100) NOT NULL UNIQUE,
-                    password_hash VARCHAR(100) NOT NULL,
-                    blood_group_id INT NOT NULL REFERENCES blood_group(blood_group_id),
-                    CONSTRAINT chk_donor_weight CHECK (weight >= 50),
-                    CONSTRAINT chk_donor_age CHECK (age >= 18)
-                )
-                """,
-                """
-                CREATE TABLE IF NOT EXISTS donation_request (
-                    request_id SERIAL PRIMARY KEY,
-                    donor_id INT NOT NULL REFERENCES donor(donor_id),
-                    donation_date DATE NOT NULL,
-                    request_status request_status NOT NULL
-                )
-                """,
-                """
-                CREATE TABLE IF NOT EXISTS medical_examination (
-                    examination_id SERIAL PRIMARY KEY,
-                    request_id INT NOT NULL UNIQUE REFERENCES donation_request(request_id),
-                    examination_date DATE NOT NULL,
-                    hemoglobin DECIMAL(5, 2),
-                    blood_pressure VARCHAR(20),
-                    conclusion VARCHAR(200),
-                    admission_status admission_status NOT NULL,
-                    CONSTRAINT chk_hemoglobin CHECK (hemoglobin IS NULL OR hemoglobin > 0)
-                )
-                """,
-                """
-                CREATE TABLE IF NOT EXISTS blood_batch (
-                    batch_id SERIAL PRIMARY KEY,
-                    blood_group_id INT NOT NULL REFERENCES blood_group(blood_group_id),
-                    batch_number VARCHAR(50) NOT NULL UNIQUE,
-                    preparation_date DATE NOT NULL,
-                    expiration_date DATE NOT NULL,
-                    total_volume INT NOT NULL,
-                    status batch_status NOT NULL,
-                    CONSTRAINT chk_batch_volume CHECK (total_volume > 0),
-                    CONSTRAINT chk_batch_dates CHECK (expiration_date > preparation_date)
-                )
-                """,
-                """
-                CREATE TABLE IF NOT EXISTS donation (
-                    donation_id SERIAL PRIMARY KEY,
-                    examination_id INT NOT NULL UNIQUE REFERENCES medical_examination(examination_id),
-                    batch_id INT NOT NULL REFERENCES blood_batch(batch_id),
-                    donation_date DATE NOT NULL,
-                    blood_volume INT NOT NULL,
-                    donation_type donation_type NOT NULL,
-                    result donation_result NOT NULL,
-                    CONSTRAINT chk_donation_volume CHECK (blood_volume > 0 AND blood_volume <= 450)
-                )
-                """
-        };
         try (Statement statement = connection.createStatement()) {
-            for (String sql : statements) {
-                statement.execute(sql);
+            for (String sql : splitStatements(readSchemaScript())) {
+                if (!sql.isBlank()) {
+                    statement.execute(sql);
+                }
             }
         }
+    }
+
+    private static String readSchemaScript() throws SQLException {
+        Path[] candidates = {
+                Path.of("sql_script", "blood_donor.sql"),
+                Path.of("..", "sql_script", "blood_donor.sql")
+        };
+        for (Path candidate : candidates) {
+            if (Files.isRegularFile(candidate)) {
+                try {
+                    return Files.readString(candidate, StandardCharsets.UTF_8);
+                } catch (IOException exception) {
+                    throw new SQLException("Не удалось прочитать SQL-схему: " + candidate, exception);
+                }
+            }
+        }
+        throw new SQLException(
+                "Не найден файл sql_script/blood_donor.sql. Запустите приложение из корня проекта или каталога bloodcenter.");
+    }
+
+    private static String[] splitStatements(String script) {
+        String withoutComments = Pattern.compile("(?s)/\\*.*?\\*/").matcher(script).replaceAll("");
+        withoutComments = withoutComments.replaceAll("(?m)--.*$", "");
+        return withoutComments.split(";");
     }
 
     private static void migrateDonorAge(Connection connection) throws SQLException {
