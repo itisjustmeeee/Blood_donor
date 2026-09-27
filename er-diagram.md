@@ -2,13 +2,17 @@
 
 Диаграмма соответствует текущей схеме из `sql_script/blood_donor.sql`.
 
-```
+```mermaid
 erDiagram
+
     BLOOD_GROUP ||--o{ DONOR : "имеет"
     BLOOD_GROUP ||--o{ BLOOD_BATCH : "для группы"
+
     DONOR ||--o{ DONATION_REQUEST : "создаёт"
+
     DONATION_REQUEST ||--o| MEDICAL_EXAMINATION : "проходит"
     MEDICAL_EXAMINATION ||--o| DONATION : "используется в"
+
     BLOOD_BATCH ||--o{ DONATION : "содержит"
 
     BLOOD_GROUP {
@@ -38,7 +42,7 @@ erDiagram
 
     MEDICAL_EXAMINATION {
         int examination_id PK
-        int request_id FK, UK
+        int request_id FK
         date examination_date
         decimal hemoglobin
         varchar blood_pressure
@@ -58,7 +62,7 @@ erDiagram
 
     DONATION {
         int donation_id PK
-        int examination_id FK UK
+        int examination_id FK
         int batch_id FK
         date donation_date
         int blood_volume

@@ -21,7 +21,7 @@
 
 Например, в PowerShell перед запуском:
 
-```
+```powershell
 $env:BLOOD_DB_HOST = "localhost"
 $env:BLOOD_DB_PORT = "5432"
 $env:BLOOD_DB_NAME = "blood_donor"
@@ -32,13 +32,13 @@ $env:BLOOD_DB_PASSWORD = "пароль, указанный при установ
 Если пароль неизвестен, его можно изменить в pgAdmin: **Login/Group Roles** -> нужный пользователь (обычно `postgres`) -> **Properties** -> **Definition** -> **Password**.<br>
 Через SQL это выполняется командой под администратором:
 
-```
+```sql
 ALTER USER postgres WITH PASSWORD 'новый_пароль';
 ```
 
 Вместо `postgres` можно создать отдельного пользователя для приложения:
 
-```
+```sql
 CREATE USER blood_app WITH PASSWORD 'пароль_приложения';
 ALTER USER blood_app CREATEDB;
 ```
@@ -49,7 +49,7 @@ ALTER USER blood_app CREATEDB;
 
 Из каталога `bloodcenter`:
 
-```
+```powershell
 mvn compile
 mvn exec:java
 ```
@@ -61,7 +61,7 @@ mvn exec:java
 Если в терминале IntelliJ IDEA русские символы отображаются как `����`, проверьте настройку **Settings | Editor | General | Console | Default Encoding**: должно быть выбрано `UTF-8`.<br>
 Для встроенного терминала PowerShell в настройке **Settings | Tools | Terminal | Shell path** укажите `powershell.exe`.
 
-```
+```powershell
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 ```

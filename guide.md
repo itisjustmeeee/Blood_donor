@@ -619,7 +619,7 @@ $env:BLOOD_DB_PASSWORD = "пароль PostgreSQL"
 
 Из каталога `bloodcenter` прописать команды:
 
-```
+```powershell
 mvn clean test
 mvn exec:java
 ```
