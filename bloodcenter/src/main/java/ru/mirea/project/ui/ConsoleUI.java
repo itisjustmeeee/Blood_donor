@@ -54,10 +54,11 @@ public class ConsoleUI {
     private final BloodBatchRepository batchDao = new BloodBatchRepository();
     private final DonationRepository donationDao = new DonationRepository();
     private final DonorService donorService = new DonorService(donorDao, bloodGroupDao);
-    private final DonationService donationService =
-            new DonationService(requestDao, examinationDao, donationDao, batchDao);
-    private final MedicalExaminationService examinationService =
-            new MedicalExaminationService(examinationDao, requestDao, donorDao);
+    private final DonationService donationService = new DonationService(requestDao, examinationDao, donationDao,
+            batchDao);
+    private final MedicalExaminationService examinationService = new MedicalExaminationService(examinationDao,
+            requestDao, donorDao);
+
     public void start() {
         System.out.println("=== Центр донорства крови ===");
         try {
@@ -161,8 +162,10 @@ public class ConsoleUI {
                 return;
             }
             System.out.println("Добро пожаловать, " + donor.fullName() + "!");
-            if ("doctor".equalsIgnoreCase(donor.role())) doctorMenu(donor);
-            else donorMenu(donor);
+            if ("doctor".equalsIgnoreCase(donor.role()))
+                doctorMenu(donor);
+            else
+                donorMenu(donor);
         } catch (SQLException exception) {
             databaseError(exception);
         }
@@ -291,8 +294,10 @@ public class ConsoleUI {
         String pressure = required("Давление: ");
         String conclusion = required("Заключение: ");
         String status = read("1 - допустить, 2 - отклонить: ");
-        if ("1".equals(status)) status = "accepted";
-        else if ("2".equals(status)) status = "rejected";
+        if ("1".equals(status))
+            status = "accepted";
+        else if ("2".equals(status))
+            status = "rejected";
         else {
             error("Решение не изменено.");
             return;
@@ -351,8 +356,10 @@ public class ConsoleUI {
         String pressure = required("Давление: ");
         String conclusion = required("Заключение: ");
         String status = read("1 - допустить, 2 - отклонить: ");
-        if ("1".equals(status)) status = "accepted";
-        else if ("2".equals(status)) status = "rejected";
+        if ("1".equals(status))
+            status = "accepted";
+        else if ("2".equals(status))
+            status = "rejected";
         else {
             error("Решение не изменено.");
             return;
@@ -455,7 +462,8 @@ public class ConsoleUI {
     private int donationVolume(BloodBatch batch) {
         while (true) {
             int volume = positiveInt("Объём донации (мл, не более 450): ");
-            if (volume <= 450 && volume <= batch.totalVolume()) return volume;
+            if (volume <= 450 && volume <= batch.totalVolume())
+                return volume;
             error("Объём донации должен быть от 1 до 450 мл и не превышать остаток партии.");
         }
     }
@@ -478,9 +486,12 @@ public class ConsoleUI {
     private String donationType() {
         while (true) {
             String value = read("Тип донации: 1 - цельная кровь, 2 - плазма, 3 - тромбоциты: ");
-            if ("1".equals(value)) return "whole_blood";
-            if ("2".equals(value)) return "plasma";
-            if ("3".equals(value)) return "platelets";
+            if ("1".equals(value))
+                return "whole_blood";
+            if ("2".equals(value))
+                return "plasma";
+            if ("3".equals(value))
+                return "platelets";
             error("Выберите 1, 2 или 3.");
         }
     }
@@ -488,128 +499,137 @@ public class ConsoleUI {
     private String donationResult() {
         while (true) {
             String value = read("Заключение: 1 - успешная, 2 - неуспешная: ");
-            if ("1".equals(value)) return "successful";
-            if ("2".equals(value)) return "unsuccessful";
+            if ("1".equals(value))
+                return "successful";
+            if ("2".equals(value))
+                return "unsuccessful";
             error("Выберите 1 или 2.");
         }
     }
 
     private void donorExaminations(Donor donor) throws SQLException {
-            List<MedicalExamination> all = examinationDao.findByDonor(donor.id());
-            System.out.println("\nФильтр обследований: 1 - все, 2 - по статусу, 3 - по месяцу, 0 - назад");
-            switch (read("Выберите фильтр: ")) {
-                case "1" -> printExaminations(all);
-                case "2" -> {
-                    String status = examinationStatus();
-                    printExaminations(all.stream()
-                            .filter(item -> item.admissionStatus().equalsIgnoreCase(status))
-                            .toList());
-                }
-                case "3" -> {
-                    YearMonth month = month();
-                    printExaminations(all.stream()
-                            .filter(item -> YearMonth.from(item.examinationDate()).equals(month))
-                            .toList());
-                }
-                case "0" -> { }
-                default -> error("Неизвестный фильтр.");
+        List<MedicalExamination> all = examinationDao.findByDonor(donor.id());
+        System.out.println("\nФильтр обследований: 1 - все, 2 - по статусу, 3 - по месяцу, 0 - назад");
+        switch (read("Выберите фильтр: ")) {
+            case "1" -> printExaminations(all);
+            case "2" -> {
+                String status = examinationStatus();
+                printExaminations(all.stream()
+                        .filter(item -> item.admissionStatus().equalsIgnoreCase(status))
+                        .toList());
+            }
+            case "3" -> {
+                YearMonth month = month();
+                printExaminations(all.stream()
+                        .filter(item -> YearMonth.from(item.examinationDate()).equals(month))
+                        .toList());
+            }
+            case "0" -> {
+            }
+            default -> error("Неизвестный фильтр.");
+        }
+    }
+
+    private String examinationStatus() {
+        while (true) {
+            String value = read("Статус: 1 - ожидает решения, 2 - допущен, 3 - не допущен: ");
+            if ("1".equals(value))
+                return "pending";
+            if ("2".equals(value))
+                return "accepted";
+            if ("3".equals(value))
+                return "rejected";
+            error("Выберите 1, 2 или 3.");
+        }
+    }
+
+    private YearMonth month() {
+        while (true) {
+            try {
+                return YearMonth.parse(read("Месяц (ММ.ГГГГ): "),
+                        DateTimeFormatter.ofPattern("MM.uuuu"));
+            } catch (DateTimeParseException exception) {
+                error("Введите месяц в формате ММ.ГГГГ.");
             }
         }
+    }
 
-        private String examinationStatus() {
-            while (true) {
-                String value = read("Статус: 1 - ожидает решения, 2 - допущен, 3 - не допущен: ");
-                if ("1".equals(value)) return "pending";
-                if ("2".equals(value)) return "accepted";
-                if ("3".equals(value)) return "rejected";
-                error("Выберите 1, 2 или 3.");
-            }
+    private void donorDonations(Donor donor) throws SQLException {
+        List<Donation> donations = donationDao.findByDonor(donor.id());
+        System.out.println("\nМои донации: 1 - все, 2 - поиск по месяцу и году, 0 - назад");
+        String choice = read("Выберите действие: ");
+        if ("0".equals(choice))
+            return;
+        if ("2".equals(choice)) {
+            YearMonth selectedMonth = month();
+            donations = donations.stream()
+                    .filter(item -> YearMonth.from(item.donationDate()).equals(selectedMonth))
+                    .toList();
+            printDonations(donations, "Мои донации за " + selectedMonth.format(
+                    DateTimeFormatter.ofPattern("MM.uuuu")));
+        } else if ("1".equals(choice)) {
+            printDonations(donations, "Мои донации");
+        } else {
+            error("Неизвестный вариант поиска.");
         }
+    }
 
-        private YearMonth month() {
-            while (true) {
-                try {
-                    return YearMonth.parse(read("Месяц (ММ.ГГГГ): "),
-                            DateTimeFormatter.ofPattern("MM.uuuu"));
-                } catch (DateTimeParseException exception) {
-                    error("Введите месяц в формате ММ.ГГГГ.");
-                }
-            }
+    private void doctorDonations() throws SQLException {
+        List<Donation> donations = donationDao.findAll();
+        System.out.println("\nПоиск донаций: 1 - все, 2 - по месяцу и году, 0 - назад");
+        String choice = read("Выберите действие: ");
+        if ("0".equals(choice))
+            return;
+        if ("2".equals(choice)) {
+            YearMonth selectedMonth = month();
+            donations = donations.stream()
+                    .filter(item -> YearMonth.from(item.donationDate()).equals(selectedMonth))
+                    .toList();
+            printDonations(donations, "Донации за " + selectedMonth.format(
+                    DateTimeFormatter.ofPattern("MM.uuuu")));
+        } else if (!"1".equals(choice)) {
+            error("Неизвестный вариант поиска.");
+            return;
+        } else {
+            printDonations(donations, "Все донации");
         }
+    }
 
-        private void donorDonations(Donor donor) throws SQLException {
-            List<Donation> donations = donationDao.findByDonor(donor.id());
-            System.out.println("\nМои донации: 1 - все, 2 - поиск по месяцу и году, 0 - назад");
-            String choice = read("Выберите действие: ");
-            if ("0".equals(choice)) return;
-            if ("2".equals(choice)) {
-                YearMonth selectedMonth = month();
-                donations = donations.stream()
-                        .filter(item -> YearMonth.from(item.donationDate()).equals(selectedMonth))
-                        .toList();
-                printDonations(donations, "Мои донации за " + selectedMonth.format(
-                        DateTimeFormatter.ofPattern("MM.uuuu")));
-            } else if ("1".equals(choice)) {
-                printDonations(donations, "Мои донации");
-            } else {
-                error("Неизвестный вариант поиска.");
-            }
+    private void printDonations(List<Donation> donations, String title) {
+        System.out.println("\n=== " + title + " ===");
+        if (donations.isEmpty()) {
+            System.out.println("Донаций не найдено.");
+            return;
         }
-
-        private void doctorDonations() throws SQLException {
-            List<Donation> donations = donationDao.findAll();
-            System.out.println("\nПоиск донаций: 1 - все, 2 - по месяцу и году, 0 - назад");
-            String choice = read("Выберите действие: ");
-            if ("0".equals(choice)) return;
-            if ("2".equals(choice)) {
-                YearMonth selectedMonth = month();
-                donations = donations.stream()
-                        .filter(item -> YearMonth.from(item.donationDate()).equals(selectedMonth))
-                        .toList();
-                printDonations(donations, "Донации за " + selectedMonth.format(
-                        DateTimeFormatter.ofPattern("MM.uuuu")));
-            } else if (!"1".equals(choice)) {
-                error("Неизвестный вариант поиска.");
-                return;
-            } else {
-                printDonations(donations, "Все донации");
-            }
-        }
-
-        private void printDonations(List<Donation> donations, String title) {
-            System.out.println("\n=== " + title + " ===");
-            if (donations.isEmpty()) {
-                System.out.println("Донаций не найдено.");
-                return;
-            }
-            for (int i = 0; i < donations.size(); i++) {
-                Donation item = donations.get(i);
-                System.out.printf("%d. Донация #%d | донор: %s | дата: %s | объём: %d мл | тип: %s | результат: %s | группа: %s%n",
+        for (int i = 0; i < donations.size(); i++) {
+            Donation item = donations.get(i);
+            System.out.printf(
+                    "%d. Донация #%d | донор: %s | дата: %s | объём: %d мл | тип: %s | результат: %s | группа: %s%n",
                     i + 1, item.id(), item.donorName(), item.donationDate().format(DATE_FORMAT),
                     item.bloodVolume(), donationTypeLabel(item.donationType()),
                     donationResultLabel(item.result()), item.bloodGroup());
-            }
         }
+    }
 
-        private void bloodBatchMenu() throws SQLException {
-            List<BloodBatch> batches = batchDao.findAll();
-            System.out.println("\nСортировка партий крови: 1 - по объёму (возрастание),"
-                    + " 2 - по объёму (убывание), 0 - без сортировки");
-            String choice = read("Выберите вариант: ");
-            BloodBatchSorter sorter = null;
-            if ("1".equals(choice)) {
-                sorter = new AscendingBloodBatchSorter();
-            } else if ("2".equals(choice)) {
-                sorter = new DescendingBloodBatchSorter();
-            } else if (!"0".equals(choice)) {
-                error("Неизвестный вариант сортировки.");
-                return;
-            }
-            if (sorter != null) {
-                batches = sorter.sort(batches);
-            }
-            printBatches(batches);
+    private void bloodBatchMenu() throws SQLException {
+        List<BloodBatch> batches = batchDao.findAll();
+        System.out.println("\nСортировка партий крови: 1 - по объёму (возрастание),"
+                + " 2 - по объёму (убывание), 0 - без сортировки");
+        String choice = read("Выберите вариант: ");
+        BloodBatchSorter sorter = null;
+        if ("1".equals(choice)) {
+            sorter = new AscendingBloodBatchSorter();
+        } else if ("2".equals(choice)) {
+            sorter = new DescendingBloodBatchSorter();
+        } else if (!"0".equals(choice)) {
+            error("Неизвестный вариант сортировки.");
+            return;
         }
+        if (sorter != null) {
+            batches = sorter.sort(batches);
+        }
+        printBatches(batches);
+    }
 
     private void printDonor(Donor donor) {
         System.out.println("\n=== Профиль ===");
@@ -643,7 +663,8 @@ public class ConsoleUI {
         }
         for (int i = 0; i < examinations.size(); i++) {
             MedicalExamination examination = examinations.get(i);
-            System.out.printf("%d. Обследование #%d | донор: %s | дата: %s | гемоглобин: %s | давление: %s | статус: %s%n",
+            System.out.printf(
+                    "%d. Обследование #%d | донор: %s | дата: %s | гемоглобин: %s | давление: %s | статус: %s%n",
                     i + 1, examination.id(), examination.donorName(),
                     examination.examinationDate().format(DATE_FORMAT),
                     valueOrDash(examination.hemoglobin()), valueOrDash(examination.bloodPressure()),
@@ -818,7 +839,8 @@ public class ConsoleUI {
 
     private void exportStatistics(List<List<String>> report, String fileName) {
         String format = read("Экспорт статистики: 1 - CSV, 2 - Excel (.xlsx), 0 - не экспортировать: ");
-        if ("0".equals(format)) return;
+        if ("0".equals(format))
+            return;
         if (!"1".equals(format) && !"2".equals(format)) {
             error("Выберите 1, 2 или 0.");
             return;
@@ -862,7 +884,8 @@ public class ConsoleUI {
                     .filter(group -> group.bloodType().equals(bloodType)
                             && group.rhFactor().equals(rhFactor))
                     .findFirst();
-            if (selectedGroup.isPresent()) return selectedGroup.get();
+            if (selectedGroup.isPresent())
+                return selectedGroup.get();
             error("Такая группа крови отсутствует в таблице blood_group. Выберите другую.");
         }
     }
@@ -880,7 +903,8 @@ public class ConsoleUI {
     private String readRhFactor() {
         while (true) {
             String value = read("Резус-фактор (+ или -): ");
-            if (value.equals("+") || value.equals("-")) return value;
+            if (value.equals("+") || value.equals("-"))
+                return value;
             error("Резус-фактор должен быть указан как + или -.");
         }
     }
@@ -888,8 +912,10 @@ public class ConsoleUI {
     private String readRole() {
         while (true) {
             String value = read("Роль (1 - донор, 2 - врач): ");
-            if ("1".equals(value)) return "donor";
-            if ("2".equals(value)) return "doctor";
+            if ("1".equals(value))
+                return "donor";
+            if ("2".equals(value))
+                return "doctor";
             error("Выберите 1 или 2.");
         }
     }
@@ -897,8 +923,10 @@ public class ConsoleUI {
     private String readGender() {
         while (true) {
             String value = read("Пол (муж./жен.): ").toLowerCase(Locale.ROOT);
-            if (value.equals("муж") || value.equals("муж." ) || value.equals("male")) return "male";
-            if (value.equals("жен") || value.equals("жен.") || value.equals("female")) return "female";
+            if (value.equals("муж") || value.equals("муж.") || value.equals("male"))
+                return "male";
+            if (value.equals("жен") || value.equals("жен.") || value.equals("female"))
+                return "female";
             error("Введите «муж.» или «жен.».");
         }
     }
@@ -906,7 +934,8 @@ public class ConsoleUI {
     private String personName(String prompt) {
         while (true) {
             String value = read(prompt);
-            if (NAME_PATTERN.matcher(value).matches()) return value;
+            if (NAME_PATTERN.matcher(value).matches())
+                return value;
             error("Введите только буквы; допускается дефис.");
         }
     }
@@ -914,7 +943,8 @@ public class ConsoleUI {
     private String email(String prompt) {
         while (true) {
             String value = read(prompt).toLowerCase(Locale.ROOT);
-            if (EMAIL_PATTERN.matcher(value).matches()) return value;
+            if (EMAIL_PATTERN.matcher(value).matches())
+                return value;
             error("Введите корректный email, например user@example.com.");
         }
     }
@@ -922,7 +952,8 @@ public class ConsoleUI {
     private String password() {
         while (true) {
             String value = required("Пароль: ");
-            if (value.length() >= 6) return value;
+            if (value.length() >= 6)
+                return value;
             error("Пароль должен содержать не менее 6 символов.");
         }
     }
@@ -931,7 +962,8 @@ public class ConsoleUI {
         while (true) {
             try {
                 int value = Integer.parseInt(read(prompt));
-                if (value > 0) return value;
+                if (value > 0)
+                    return value;
             } catch (NumberFormatException ignored) {
                 // Повторный запрос с понятным сообщением ниже.
             }
@@ -954,7 +986,8 @@ public class ConsoleUI {
         while (true) {
             try {
                 int value = Integer.parseInt(read("Номер: ")) - 1;
-                if (value >= 0 && value < size) return value;
+                if (value >= 0 && value < size)
+                    return value;
             } catch (NumberFormatException ignored) {
                 // Повторный запрос с понятным сообщением ниже.
             }
@@ -975,7 +1008,8 @@ public class ConsoleUI {
     private String required(String prompt) {
         while (true) {
             String value = read(prompt);
-            if (!value.isBlank()) return value;
+            if (!value.isBlank())
+                return value;
             error("Поле не может быть пустым.");
         }
     }

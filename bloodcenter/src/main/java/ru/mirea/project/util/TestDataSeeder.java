@@ -70,15 +70,15 @@ public final class TestDataSeeder {
     }
 
     private static int insertDonor(Connection connection, String name, int age,
-                                   String gender, int weight, String email,
-                                   String bloodType, String rhFactor) throws SQLException {
+            String gender, int weight, String email,
+            String bloodType, String rhFactor) throws SQLException {
         return insertDonor(connection, name, age, gender, weight, email,
                 bloodType, rhFactor, "donor");
     }
 
     private static int insertDonor(Connection connection, String name, int age,
-                                   String gender, int weight, String email,
-                                   String bloodType, String rhFactor, String role)
+            String gender, int weight, String email,
+            String bloodType, String rhFactor, String role)
             throws SQLException {
         String sql = """
                 INSERT INTO donor(full_name,age,role,gender,weight,email,password_hash,blood_group_id)
@@ -106,8 +106,8 @@ public final class TestDataSeeder {
     }
 
     private static int insertExamination(Connection connection, int donorId, LocalDate date,
-                                         String admissionStatus, String hemoglobin,
-                                         String pressure, String conclusion, String requestStatus)
+            String admissionStatus, String hemoglobin,
+            String pressure, String conclusion, String requestStatus)
             throws SQLException {
         int requestId;
         try (PreparedStatement statement = connection.prepareStatement("""
@@ -129,8 +129,10 @@ public final class TestDataSeeder {
                 """)) {
             statement.setInt(1, requestId);
             statement.setDate(2, Date.valueOf(date));
-            if (hemoglobin == null) statement.setNull(3, java.sql.Types.NUMERIC);
-            else statement.setBigDecimal(3, new java.math.BigDecimal(hemoglobin));
+            if (hemoglobin == null)
+                statement.setNull(3, java.sql.Types.NUMERIC);
+            else
+                statement.setBigDecimal(3, new java.math.BigDecimal(hemoglobin));
             statement.setString(4, pressure);
             statement.setString(5, conclusion);
             statement.setString(6, admissionStatus);
@@ -142,7 +144,7 @@ public final class TestDataSeeder {
     }
 
     private static void insertDonation(Connection connection, int examinationId,
-                                       String batchNumber, LocalDate date) throws SQLException {
+            String batchNumber, LocalDate date) throws SQLException {
         String sql = """
                 INSERT INTO donation(examination_id,batch_id,donation_date,blood_volume,donation_type,result)
                 SELECT ?, batch_id, ?, 450, 'whole_blood'::donation_type,

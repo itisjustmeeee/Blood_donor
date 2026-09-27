@@ -32,7 +32,8 @@ public final class ExcelExporter {
         chooser.setFileFilter(new FileNameExtensionFilter(
                 "Файл " + extension.toUpperCase(), extension));
 
-        if (chooser.showSaveDialog(null) != JFileChooser.APPROVE_OPTION) return null;
+        if (chooser.showSaveDialog(null) != JFileChooser.APPROVE_OPTION)
+            return null;
 
         Path path = chooser.getSelectedFile().toPath();
         String pathText = path.toString();
@@ -44,9 +45,11 @@ public final class ExcelExporter {
                     "Файл уже существует. Перезаписать его?",
                     "Подтверждение перезаписи",
                     JOptionPane.YES_NO_OPTION);
-            if (answer != JOptionPane.YES_OPTION) return null;
+            if (answer != JOptionPane.YES_OPTION)
+                return null;
         }
-        if ("1".equals(format)) return exportCsv(rows, path);
+        if ("1".equals(format))
+            return exportCsv(rows, path);
         return exportExcel(rows, path);
     }
 
@@ -55,7 +58,8 @@ public final class ExcelExporter {
             writer.write('\uFEFF');
             for (List<String> row : rows) {
                 for (int i = 0; i < row.size(); i++) {
-                    if (i > 0) writer.write(';');
+                    if (i > 0)
+                        writer.write(';');
                     writer.write(csvValue(row.get(i)));
                 }
                 writer.newLine();
@@ -93,6 +97,3 @@ public final class ExcelExporter {
         return safeValue;
     }
 }
-
-
-

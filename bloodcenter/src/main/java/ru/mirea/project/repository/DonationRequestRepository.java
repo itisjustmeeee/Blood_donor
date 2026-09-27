@@ -18,7 +18,7 @@ public class DonationRequestRepository {
     public DonationRequest create(int donorId, LocalDate date, String status) throws SQLException {
         String sql = "INSERT INTO donation_request(donor_id, donation_date, request_status) VALUES (?, ?, ?::request_status) RETURNING request_id";
         try (var connection = DatabaseManager.getConnection();
-             var statement = connection.prepareStatement(sql)) {
+                var statement = connection.prepareStatement(sql)) {
             statement.setInt(1, donorId);
             statement.setDate(2, Date.valueOf(date));
             statement.setString(3, status);
@@ -56,7 +56,7 @@ public class DonationRequestRepository {
                 )
                 """;
         try (var connection = DatabaseManager.getConnection();
-             var statement = connection.prepareStatement(sql)) {
+                var statement = connection.prepareStatement(sql)) {
             statement.setInt(1, donorId);
             try (var rows = statement.executeQuery()) {
                 rows.next();
@@ -86,7 +86,7 @@ public class DonationRequestRepository {
     public void updateStatus(int requestId, String status) throws SQLException {
         String sql = "UPDATE donation_request SET request_status=?::request_status WHERE request_id=?";
         try (var connection = DatabaseManager.getConnection();
-             var statement = connection.prepareStatement(sql)) {
+                var statement = connection.prepareStatement(sql)) {
             statement.setString(1, status);
             statement.setInt(2, requestId);
             statement.executeUpdate();
@@ -96,16 +96,15 @@ public class DonationRequestRepository {
     private List<DonationRequest> find(String sql, Integer... parameters) throws SQLException {
         List<DonationRequest> result = new ArrayList<>();
         try (var connection = DatabaseManager.getConnection();
-             var statement = connection.prepareStatement(sql)) {
-            for (int i = 0; i < parameters.length; i++) statement.setInt(i + 1, parameters[i]);
+                var statement = connection.prepareStatement(sql)) {
+            for (int i = 0; i < parameters.length; i++)
+                statement.setInt(i + 1, parameters[i]);
             try (var rows = statement.executeQuery()) {
-                while (rows.next()) result.add(new DonationRequest(rows.getInt(1), rows.getInt(2),
-                        rows.getDate(3).toLocalDate(), rows.getString(4), rows.getString(5)));
+                while (rows.next())
+                    result.add(new DonationRequest(rows.getInt(1), rows.getInt(2),
+                            rows.getDate(3).toLocalDate(), rows.getString(4), rows.getString(5)));
             }
         }
         return result;
     }
 }
-
-
-

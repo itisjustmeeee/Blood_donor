@@ -19,14 +19,14 @@ public class MedicalExaminationService {
     private final DonorRepository donorDao;
 
     public MedicalExaminationService(MedicalExaminationRepository examinationDao,
-                                     DonationRequestRepository requestDao, DonorRepository donorDao) {
+            DonationRequestRepository requestDao, DonorRepository donorDao) {
         this.examinationDao = examinationDao;
         this.requestDao = requestDao;
         this.donorDao = donorDao;
     }
 
     public void process(int examinationId, int requestId, BigDecimal hemoglobin,
-                        String pressure, String conclusion, String status)
+            String pressure, String conclusion, String status)
             throws SQLException, BusinessException {
         if (!"accepted".equalsIgnoreCase(status) && !"rejected".equalsIgnoreCase(status)) {
             throw new ExaminationValidationException("Недопустимый статус медицинского обследования.");
@@ -89,7 +89,7 @@ public class MedicalExaminationService {
     }
 
     public void updateResultForDoctor(int examinationId, BigDecimal hemoglobin,
-                                      String pressure, String conclusion, String status)
+            String pressure, String conclusion, String status)
             throws SQLException, BusinessException {
         MedicalExamination examination = examinationDao.findById(examinationId);
         if (examination == null) {

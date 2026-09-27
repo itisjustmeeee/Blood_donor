@@ -21,7 +21,7 @@ public class BloodBatchRepository {
                 END $$;
                 """;
         try (var connection = ru.mirea.project.util.DatabaseManager.getConnection();
-             var statement = connection.prepareStatement(sql)) {
+                var statement = connection.prepareStatement(sql)) {
             statement.execute();
         }
     }
@@ -47,7 +47,7 @@ public class BloodBatchRepository {
                 ON CONFLICT (batch_number) DO NOTHING
                 """;
         try (var connection = ru.mirea.project.util.DatabaseManager.getConnection();
-             var statement = connection.prepareStatement(sql)) {
+                var statement = connection.prepareStatement(sql)) {
             statement.executeUpdate();
         }
         String statusSql = """
@@ -60,7 +60,7 @@ public class BloodBatchRepository {
                                 FROM donation d WHERE d.batch_id=b.batch_id), 0) < b.total_volume
                 """;
         try (var connection = ru.mirea.project.util.DatabaseManager.getConnection();
-             var statement = connection.prepareStatement(statusSql)) {
+                var statement = connection.prepareStatement(statusSql)) {
             statement.executeUpdate();
         }
     }
@@ -78,12 +78,13 @@ public class BloodBatchRepository {
                 """;
         List<BloodBatch> result = new ArrayList<>();
         try (var connection = DatabaseManager.getConnection();
-             var statement = connection.prepareStatement(sql)) {
+                var statement = connection.prepareStatement(sql)) {
             statement.setInt(1, requestId);
             try (var rows = statement.executeQuery()) {
-                while (rows.next()) result.add(new BloodBatch(rows.getInt(1), rows.getInt(2),
-                        rows.getString(3), rows.getDate(4).toLocalDate(), rows.getDate(5).toLocalDate(),
-                        rows.getInt(6), rows.getString(7), rows.getString(8)));
+                while (rows.next())
+                    result.add(new BloodBatch(rows.getInt(1), rows.getInt(2),
+                            rows.getString(3), rows.getDate(4).toLocalDate(), rows.getDate(5).toLocalDate(),
+                            rows.getInt(6), rows.getString(7), rows.getString(8)));
             }
         }
         return result;
@@ -98,11 +99,12 @@ public class BloodBatchRepository {
                 """;
         List<BloodBatch> result = new ArrayList<>();
         try (var connection = DatabaseManager.getConnection();
-             var statement = connection.prepareStatement(sql);
-             var rows = statement.executeQuery()) {
-            while (rows.next()) result.add(new BloodBatch(rows.getInt(1), rows.getInt(2),
-                    rows.getString(3), rows.getDate(4).toLocalDate(), rows.getDate(5).toLocalDate(),
-                    rows.getInt(6), rows.getString(7), rows.getString(8)));
+                var statement = connection.prepareStatement(sql);
+                var rows = statement.executeQuery()) {
+            while (rows.next())
+                result.add(new BloodBatch(rows.getInt(1), rows.getInt(2),
+                        rows.getString(3), rows.getDate(4).toLocalDate(), rows.getDate(5).toLocalDate(),
+                        rows.getInt(6), rows.getString(7), rows.getString(8)));
         }
         return result;
     }

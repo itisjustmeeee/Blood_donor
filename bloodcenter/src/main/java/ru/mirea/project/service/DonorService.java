@@ -21,8 +21,8 @@ public class DonorService {
     }
 
     public Donor register(String name, int age, String role, String gender,
-                          int weight, String email, String password,
-                          int bloodGroupId) throws SQLException, BusinessException {
+            int weight, String email, String password,
+            int bloodGroupId) throws SQLException, BusinessException {
         if ("donor".equalsIgnoreCase(role) && bloodGroupId <= 0) {
             throw new RegistrationException("Для регистрации донора необходимо указать группу крови и резус-фактор.");
         }
