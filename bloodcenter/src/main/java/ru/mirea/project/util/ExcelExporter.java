@@ -1,4 +1,4 @@
-package ru.mirea.project.ui;
+package ru.mirea.project.util;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -16,10 +16,10 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-public final class StatisticsExporter {
+public final class ExcelExporter {
     private static final DateTimeFormatter FILE_TIME = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
-    private StatisticsExporter() {
+    private ExcelExporter() {
     }
 
     public static Path export(List<List<String>> rows, String name, String format) throws IOException {
@@ -93,3 +93,6 @@ public final class StatisticsExporter {
         return safeValue;
     }
 }
+
+
+

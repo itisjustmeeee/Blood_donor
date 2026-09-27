@@ -1,18 +1,26 @@
 package ru.mirea.project.ui;
 
-import ru.mirea.project.dao.BloodBatchDao;
-import ru.mirea.project.dao.BloodGroupDao;
-import ru.mirea.project.dao.DonationDao;
-import ru.mirea.project.dao.DonationRequestDao;
-import ru.mirea.project.dao.DonorDao;
-import ru.mirea.project.dao.MedicalExaminationDao;
+import ru.mirea.project.repository.BloodBatchRepository;
+import ru.mirea.project.repository.BloodGroupRepository;
+import ru.mirea.project.repository.DonationRepository;
+import ru.mirea.project.repository.DonationRequestRepository;
+import ru.mirea.project.repository.DonorRepository;
+import ru.mirea.project.repository.MedicalExaminationRepository;
 import ru.mirea.project.model.BloodBatch;
 import ru.mirea.project.model.BloodGroup;
 import ru.mirea.project.model.Donation;
 import ru.mirea.project.model.DonationRequest;
 import ru.mirea.project.model.Donor;
 import ru.mirea.project.model.MedicalExamination;
-import ru.mirea.project.security.PasswordHasher;
+import ru.mirea.project.exception.BusinessException;
+import ru.mirea.project.util.ExcelExporter;
+import ru.mirea.project.util.TestDataSeeder;
+import ru.mirea.project.service.DonationService;
+import ru.mirea.project.service.DonorService;
+import ru.mirea.project.service.MedicalExaminationService;
+import ru.mirea.project.service.AscendingBloodBatchSorter;
+import ru.mirea.project.service.BloodBatchSorter;
+import ru.mirea.project.service.DescendingBloodBatchSorter;
 
 import java.math.BigDecimal;
 import java.io.InputStreamReader;
@@ -39,24 +47,73 @@ public class ConsoleUI {
             "^[\\p{L}]+(?:[-'][\\p{L}]+)*$", Pattern.UNICODE_CHARACTER_CLASS);
     private final Scanner scanner = new Scanner(
             new InputStreamReader(System.in, StandardCharsets.UTF_8));
-    private final DonorDao donorDao = new DonorDao();
-    private final BloodGroupDao bloodGroupDao = new BloodGroupDao();
-    private final DonationRequestDao requestDao = new DonationRequestDao();
-    private final MedicalExaminationDao examinationDao = new MedicalExaminationDao();
-    private final BloodBatchDao batchDao = new BloodBatchDao();
-    private final DonationDao donationDao = new DonationDao();
+    private final DonorRepository donorDao = new DonorRepository();
+    private final BloodGroupRepository bloodGroupDao = new BloodGroupRepository();
+    private final DonationRequestRepository requestDao = new DonationRequestRepository();
+    private final MedicalExaminationRepository examinationDao = new MedicalExaminationRepository();
+    private final BloodBatchRepository batchDao = new BloodBatchRepository();
+    private final DonationRepository donationDao = new DonationRepository();
+    private final DonorService donorService = new DonorService(donorDao, bloodGroupDao);
+    private final DonationService donationService =
+            new DonationService(requestDao, examinationDao, donationDao, batchDao);
+    private final MedicalExaminationService examinationService =
+            new MedicalExaminationService(examinationDao, requestDao, donorDao);
     public void start() {
         System.out.println("=== Центр донорства крови ===");
+        try {
+            bloodGroupDao.ensureDefaults();
+            batchDao.ensureDefaults();
+            batchDao.ensureRules();
+            donorDao.ensureRules();
+            donationDao.ensureRules();
+        } catch (SQLException exception) {
+            databaseError(exception);
+            return;
+        }
         boolean running = true;
         while (running) {
-            System.out.println("\n1. Регистрация\n2. Вход\n3. Проверить подключение\n0. Выход");
+            System.out.println("\n1. Регистрация\n2. Вход\n3. Проверить подключение"
+                    + "\n4. Внести тестовые данные\n0. Выход");
             switch (read("Выберите действие: ")) {
                 case "1" -> register();
                 case "2" -> login();
                 case "3" -> testConnection();
+                case "4" -> seedTestData();
                 case "0" -> running = false;
                 default -> error("Неизвестная команда.");
             }
+        }
+    }
+
+    private void seedTestData() {
+        try {
+            bloodGroupDao.ensureDefaults();
+            batchDao.ensureDefaults();
+            boolean inserted = TestDataSeeder.seed();
+            if (inserted) {
+                System.out.println("Тестовые данные добавлены.");
+                System.out.println("\nДанные для входа в тестовые аккаунты:");
+                System.out.println("Донор с несколькими обследованиями и донациями:"
+                        + "\n  Email: test.multi@example.com\n  Пароль: password");
+                System.out.println("Донор с обследованием без донации:"
+                        + "\n  Email: test.examination@example.com\n  Пароль: password");
+                System.out.println("Донор с положительным обследованием и донацией:"
+                        + "\n  Email: test.accepted@example.com\n  Пароль: password");
+                System.out.println("Донор с отклонённым обследованием:"
+                        + "\n  Email: test.rejected@example.com\n  Пароль: password");
+                System.out.println("Врач:"
+                        + "\n  Email: test.doctor@example.com\n  Пароль: password");
+            } else {
+                System.out.println("Тестовые данные уже существуют.");
+                System.out.println("\nДанные для входа в тестовые аккаунты:");
+                System.out.println("test.multi@example.com / password");
+                System.out.println("test.examination@example.com / password");
+                System.out.println("test.accepted@example.com / password");
+                System.out.println("test.rejected@example.com / password");
+                System.out.println("test.doctor@example.com / password");
+            }
+        } catch (SQLException exception) {
+            databaseError(exception);
         }
     }
 
@@ -68,19 +125,10 @@ public class ConsoleUI {
             String firstName = personName("Имя: ");
             String patronymic = personName("Отчество: ");
             String name = surname + " " + firstName + " " + patronymic;
-            LocalDate birthDate = date("Дата рождения (ДД.ММ.ГГГГ): ");
+            int age = positiveInt("Сколько лет: ");
             String gender = readGender();
             int weight = positiveInt("Вес (кг): ");
             String email = email("Email: ");
-            if (donorDao.findByEmail(email) != null) {
-                error("Пользователь с таким email уже зарегистрирован.");
-                return;
-            }
-            String phone = phone("Телефон: ");
-            if (donorDao.findByPhone(phone) != null) {
-                error("Пользователь с таким телефоном уже зарегистрирован.");
-                return;
-            }
             String password = password();
             bloodGroupDao.ensureDefaults();
             List<BloodGroup> groups = bloodGroupDao.findAll();
@@ -89,9 +137,11 @@ public class ConsoleUI {
                 return;
             }
             BloodGroup group = chooseGroup(groups);
-            Donor donor = donorDao.create(name, birthDate, role, gender, weight, email, phone,
-                    PasswordHasher.hash(password), group.id());
+            Donor donor = donorService.register(name, age, role, gender, weight, email,
+                    password, group.id());
             System.out.println("Регистрация завершена. Идентификатор: " + donor.id());
+        } catch (BusinessException exception) {
+            error(exception.getMessage());
         } catch (SQLException exception) {
             if ("23505".equals(exception.getSQLState())) {
                 error("Email или телефон уже используются.");
@@ -104,9 +154,9 @@ public class ConsoleUI {
     private void login() {
         try {
             String email = email("Email: ");
-            Donor donor = donorDao.findByEmail(email);
             String password = required("Пароль: ");
-            if (donor == null || !PasswordHasher.matches(password, donor.passwordHash())) {
+            Donor donor = donorService.authenticate(email, password);
+            if (donor == null) {
                 error("Неверный email или пароль.");
                 return;
             }
@@ -121,17 +171,22 @@ public class ConsoleUI {
     private void donorMenu(Donor donor) throws SQLException {
         boolean active = true;
         while (active) {
-            System.out.println("\n=== Кабинет донора ===\n1. Профиль\n2. Записаться на обследование"
-                    + "\n3. Запись на донацию\n4. Мои обследования\n5. Мои записи на донацию"
-                    + "\n6. Мои донации\n7. Статистика\n0. Выход");
+            System.out.println("\n=== Кабинет донора ===\n1. Профиль\n2. Изменить профиль"
+                    + "\n3. Записаться на обследование\n4. Изменить запись на обследование"
+                    + "\n5. Удалить запись на обследование\n6. Запись на донацию"
+                    + "\n7. Мои обследования\n8. Мои записи на донацию"
+                    + "\n9. Мои донации\n10. Статистика\n0. Выход");
             switch (read("Выберите действие: ")) {
                 case "1" -> printDonor(donor);
-                case "2" -> bookExamination(donor);
-                case "3" -> bookDonation(donor);
-                case "4" -> donorExaminations(donor);
-                case "5" -> printRequests(requestDao.findByDonor(donor.id()));
-                case "6" -> donorDonations(donor);
-                case "7" -> donorStatistics(donor);
+                case "2" -> donor = updateProfile(donor);
+                case "3" -> bookExamination(donor);
+                case "4" -> updateDonorExamination(donor);
+                case "5" -> deleteDonorExamination(donor);
+                case "6" -> bookDonation(donor);
+                case "7" -> donorExaminations(donor);
+                case "8" -> printRequests(requestDao.findByDonor(donor.id()));
+                case "9" -> donorDonations(donor);
+                case "10" -> donorStatistics(donor);
                 case "0" -> active = false;
                 default -> error("Неизвестная команда.");
             }
@@ -142,16 +197,21 @@ public class ConsoleUI {
         boolean active = true;
         while (active) {
             System.out.println("\n=== Кабинет врача ===\n1. Профиль\n2. Все записи на донацию"
-                    + "\n3. Все обследования\n4. Обработать обследование\n5. Партии крови\n6. Донации"
-                    + "\n7. Статистика\n0. Выход");
+                    + "\n3. Все обследования\n4. Обработать обследование\n5. Обработать донацию"
+                    + "\n6. Изменить запись на обследование\n7. Удалить запись на обследование"
+                    + "\n8. Партии крови\n9. Донации\n10. Все доноры\n11. Статистика\n0. Выход");
             switch (read("Выберите действие: ")) {
                 case "1" -> printDonor(doctor);
                 case "2" -> printRequests(requestDao.findAll());
                 case "3" -> printExaminations(examinationDao.findAll());
                 case "4" -> processExamination();
-                case "5" -> bloodBatchMenu();
-                case "6" -> doctorDonations();
-                case "7" -> doctorStatistics();
+                case "5" -> processDonation();
+                case "6" -> updateDoctorExamination();
+                case "7" -> deleteDoctorExamination();
+                case "8" -> bloodBatchMenu();
+                case "9" -> doctorDonations();
+                case "10" -> printAllDonors();
+                case "11" -> doctorStatistics();
                 case "0" -> active = false;
                 default -> error("Неизвестная команда.");
             }
@@ -160,41 +220,62 @@ public class ConsoleUI {
 
     private void bookExamination(Donor donor) throws SQLException {
         LocalDate date = date("Дата обследования (ДД.ММ.ГГГГ): ");
-        if (date.isBefore(donor.birthDate())) {
-            error("Дата обследования не может быть раньше даты рождения.");
-            return;
+        List<MedicalExamination> previousExaminations = examinationDao.findByDonor(donor.id());
+        BigDecimal hemoglobin = previousExaminations.isEmpty()
+                ? null
+                : previousExaminations.get(previousExaminations.size() - 1).hemoglobin();
+        if (hemoglobin == null) {
+            hemoglobin = decimal("Гемоглобин (г/л): ");
+        } else {
+            System.out.println("Будет использован гемоглобин последнего обследования: "
+                    + hemoglobin + " г/л.");
         }
-        DonationRequest request = requestDao.create(donor.id(), date, "created");
-        examinationDao.create(request.id(), date);
-        System.out.println("Запись и обследование созданы в БД. Номер заявки: " + request.id());
+        try {
+            DonationRequest request = donationService.bookExamination(donor, date, hemoglobin);
+            System.out.println("Запись и обследование созданы в БД. Номер заявки: " + request.id());
+        } catch (BusinessException exception) {
+            error(exception.getMessage());
+        } catch (SQLException exception) {
+            databaseError(exception);
+        }
+    }
+
+    private Donor updateProfile(Donor donor) throws SQLException {
+        int age = positiveInt("Новый возраст: ");
+        int weight = positiveInt("Новый вес (кг): ");
+        String gender = readGender();
+        try {
+            Donor updated = donorService.updateProfile(donor, age, gender, weight);
+            System.out.println("Профиль обновлён.");
+            return updated;
+        } catch (BusinessException exception) {
+            error(exception.getMessage());
+            return donor;
+        }
     }
 
     private void bookDonation(Donor donor) throws SQLException {
+        List<Integer> usedExaminationIds = donationDao.findByDonor(donor.id()).stream()
+                .map(Donation::examinationId)
+                .toList();
         List<MedicalExamination> examinations = examinationDao.findByDonor(donor.id()).stream()
                 .filter(examination -> "accepted".equalsIgnoreCase(examination.admissionStatus()))
+                .filter(examination -> !usedExaminationIds.contains(examination.id()))
                 .toList();
         if (examinations.isEmpty()) {
-            error("Запись на донацию доступна только после положительного медицинского обследования.");
+            error("Для записи нужна одна положительная медкомиссия без оформленной донации.");
             return;
         }
         System.out.println("\n=== Запись на донацию ===");
         System.out.println("Доступные положительные обследования:");
         printExaminations(examinations);
-        LocalDate examinationDate = examinations.stream()
-                .map(MedicalExamination::examinationDate)
-                .max(LocalDate::compareTo)
-                .orElseThrow();
         LocalDate donationDate = date("Дата донации (ДД.ММ.ГГГГ): ");
-        if (donationDate.isBefore(donor.birthDate())) {
-            error("Дата донации не может быть раньше даты рождения.");
-            return;
+        try {
+            DonationRequest request = donationService.bookDonation(donor, donationDate);
+            System.out.println("Запись на донацию создана. Номер заявки: " + request.id());
+        } catch (BusinessException exception) {
+            error(exception.getMessage());
         }
-        if (donationDate.isBefore(examinationDate)) {
-            error("Дата донации не может быть раньше даты медицинского обследования.");
-            return;
-        }
-        DonationRequest request = requestDao.create(donor.id(), donationDate, "created");
-        System.out.println("Запись на донацию создана. Номер заявки: " + request.id());
     }
 
     private void processExamination() throws SQLException {
@@ -203,6 +284,7 @@ public class ConsoleUI {
             System.out.println("Обследований нет.");
             return;
         }
+
         printExaminations(examinations);
         MedicalExamination examination = examinations.get(index(examinations.size()));
         BigDecimal hemoglobin = new BigDecimal(required("Гемоглобин: "));
@@ -215,8 +297,201 @@ public class ConsoleUI {
             error("Решение не изменено.");
             return;
         }
-        examinationDao.updateResult(examination.id(), hemoglobin, pressure, conclusion, status);
-        System.out.println("Результат обследования сохранён.");
+        try {
+            examinationService.process(examination.id(), examination.requestId(), hemoglobin,
+                    pressure, conclusion, status);
+            System.out.println("Результат обследования сохранён.");
+        } catch (BusinessException exception) {
+            error(exception.getMessage());
+        }
+    }
+
+    private void updateDonorExamination(Donor donor) throws SQLException {
+        List<MedicalExamination> examinations = examinationDao.findByDonor(donor.id());
+        if (examinations.isEmpty()) {
+            error("Записей на обследование нет.");
+            return;
+        }
+        MedicalExamination examination = selectExamination(examinations);
+        LocalDate newDate = date("Новая дата обследования (ДД.ММ.ГГГГ): ");
+        try {
+            examinationService.updateDateForDonor(examination.id(), donor, newDate);
+            System.out.println("Дата записи на обследование изменена.");
+        } catch (BusinessException exception) {
+            error(exception.getMessage());
+        }
+    }
+
+    private void deleteDonorExamination(Donor donor) throws SQLException {
+        List<MedicalExamination> examinations = examinationDao.findByDonor(donor.id());
+        if (examinations.isEmpty()) {
+            error("Записей на обследование нет.");
+            return;
+        }
+        MedicalExamination examination = selectExamination(examinations);
+        try {
+            examinationService.deleteForDonor(examination.id(), donor);
+            System.out.println("Запись на обследование удалена.");
+        } catch (BusinessException exception) {
+            error(exception.getMessage());
+        } catch (SQLException exception) {
+            error(exception.getMessage());
+        }
+    }
+
+    private void updateDoctorExamination() throws SQLException {
+        List<MedicalExamination> examinations = examinationDao.findAll();
+        if (examinations.isEmpty()) {
+            error("Записей на обследование нет.");
+            return;
+        }
+        MedicalExamination examination = selectExamination(examinations);
+        LocalDate newDate = date("Новая дата обследования (ДД.ММ.ГГГГ): ");
+        BigDecimal hemoglobin = new BigDecimal(required("Гемоглобин: "));
+        String pressure = required("Давление: ");
+        String conclusion = required("Заключение: ");
+        String status = read("1 - допустить, 2 - отклонить: ");
+        if ("1".equals(status)) status = "accepted";
+        else if ("2".equals(status)) status = "rejected";
+        else {
+            error("Решение не изменено.");
+            return;
+        }
+        try {
+            examinationService.updateDateForDoctor(examination.id(), newDate);
+            examinationService.updateResultForDoctor(examination.id(), hemoglobin, pressure,
+                    conclusion, status);
+            System.out.println("Запись и заключение обследования изменены.");
+        } catch (BusinessException exception) {
+            error(exception.getMessage());
+        }
+    }
+
+    private void deleteDoctorExamination() throws SQLException {
+        List<MedicalExamination> examinations = examinationDao.findAll();
+        if (examinations.isEmpty()) {
+            error("Записей на обследование нет.");
+            return;
+        }
+        MedicalExamination examination = selectExamination(examinations);
+        try {
+            examinationService.deleteForDoctor(examination.id());
+            System.out.println("Запись на обследование удалена.");
+        } catch (BusinessException exception) {
+            error(exception.getMessage());
+        }
+    }
+
+    private MedicalExamination selectExamination(List<MedicalExamination> examinations) {
+        System.out.println("\nВыберите запись на обследование:");
+        for (int i = 0; i < examinations.size(); i++) {
+            MedicalExamination examination = examinations.get(i);
+            System.out.printf("%d. #%d | донор: %s | дата: %s | статус: %s%n",
+                    i + 1, examination.id(), examination.donorName(),
+                    examination.examinationDate().format(DATE_FORMAT),
+                    admissionStatusLabel(examination.admissionStatus()));
+        }
+        return examinations.get(index(examinations.size()));
+    }
+
+    private void processDonation() throws SQLException {
+        List<DonationRequest> requests = requestDao.findForProcessing();
+        if (requests.isEmpty()) {
+            error("Нет необработанных записей на донацию.");
+            return;
+        }
+        System.out.println("\n=== Обработка донации ===");
+        for (int i = 0; i < requests.size(); i++) {
+            DonationRequest request = requests.get(i);
+            System.out.printf("%d. #%d | донор: %s | дата: %s | статус: %s%n",
+                    i + 1, request.id(), request.donorName(),
+                    request.donationDate().format(DATE_FORMAT),
+                    requestStatusLabel(request.status()));
+        }
+        DonationRequest request = requests.get(index(requests.size()));
+
+        List<Integer> usedExaminationIds = donationDao.findByDonor(request.donorId()).stream()
+                .map(Donation::examinationId)
+                .toList();
+        List<MedicalExamination> examinations = examinationDao.findByDonor(request.donorId()).stream()
+                .filter(item -> "accepted".equalsIgnoreCase(item.admissionStatus()))
+                .filter(item -> !usedExaminationIds.contains(item.id()))
+                .toList();
+        if (examinations.isEmpty()) {
+            error("Для этой записи нет свободного положительного медицинского обследования.");
+            return;
+        }
+        MedicalExamination examination = examinations.get(0);
+        System.out.println("Используется положительное обследование #" + examination.id()
+                + " донора " + examination.donorName() + ".");
+
+        List<BloodBatch> batches = batchDao.findAvailableForRequest(request.id());
+        if (batches.isEmpty()) {
+            error("Нет доступной партии крови соответствующей группы.");
+            return;
+        }
+        System.out.println("Выберите партию крови:");
+        for (int i = 0; i < batches.size(); i++) {
+            BloodBatch batch = batches.get(i);
+            System.out.printf("%d. #%d | группа: %s | объём: %d мл | статус: %s%n",
+                    i + 1, batch.id(), batch.bloodGroup(), batch.totalVolume(),
+                    batch.status());
+        }
+        BloodBatch batch = batches.get(index(batches.size()));
+        int volume = donationVolume(batch);
+        String donationType = donationType();
+        String result = donationResult();
+        try {
+            Donor donor = donorDao.findById(request.donorId());
+            Donation donation = donationService.process(request, examination, batch, volume,
+                    donationType, result, donor);
+            System.out.println("Донация обработана. Заключение: " + donationResultLabel(donation.result())
+                    + ". Номер записи: " + donation.id());
+        } catch (BusinessException exception) {
+            error(exception.getMessage());
+        }
+    }
+
+    private int donationVolume(BloodBatch batch) {
+        while (true) {
+            int volume = positiveInt("Объём донации (мл, не более 450): ");
+            if (volume <= 450 && volume <= batch.totalVolume()) return volume;
+            error("Объём донации должен быть от 1 до 450 мл и не превышать остаток партии.");
+        }
+    }
+
+    private void printAllDonors() throws SQLException {
+        List<Donor> donors = donorDao.findAll();
+        System.out.println("\n=== Все доноры и группы крови ===");
+        if (donors.isEmpty()) {
+            System.out.println("Доноров нет.");
+            return;
+        }
+        for (int i = 0; i < donors.size(); i++) {
+            Donor donor = donors.get(i);
+            System.out.printf("%d. %s | возраст: %d | пол: %s | вес: %d кг | группа крови и резус: %s%n",
+                    i + 1, donor.fullName(), donor.age(), genderLabel(donor.gender()),
+                    donor.weight(), donor.bloodGroup());
+        }
+    }
+
+    private String donationType() {
+        while (true) {
+            String value = read("Тип донации: 1 - цельная кровь, 2 - плазма, 3 - тромбоциты: ");
+            if ("1".equals(value)) return "whole_blood";
+            if ("2".equals(value)) return "plasma";
+            if ("3".equals(value)) return "platelets";
+            error("Выберите 1, 2 или 3.");
+        }
+    }
+
+    private String donationResult() {
+        while (true) {
+            String value = read("Заключение: 1 - успешная, 2 - неуспешная: ");
+            if ("1".equals(value)) return "successful";
+            if ("2".equals(value)) return "unsuccessful";
+            error("Выберите 1 или 2.");
+        }
     }
 
     private void donorExaminations(Donor donor) throws SQLException {
@@ -264,27 +539,41 @@ public class ConsoleUI {
 
         private void donorDonations(Donor donor) throws SQLException {
             List<Donation> donations = donationDao.findByDonor(donor.id());
-            LocalDate date = date("Дата донации (ДД.ММ.ГГГГ): ");
-            printDonations(donations.stream()
-                    .filter(item -> item.donationDate().equals(date))
-                    .toList(), "Мои донации за " + date.format(DATE_FORMAT));
+            System.out.println("\nМои донации: 1 - все, 2 - поиск по месяцу и году, 0 - назад");
+            String choice = read("Выберите действие: ");
+            if ("0".equals(choice)) return;
+            if ("2".equals(choice)) {
+                YearMonth selectedMonth = month();
+                donations = donations.stream()
+                        .filter(item -> YearMonth.from(item.donationDate()).equals(selectedMonth))
+                        .toList();
+                printDonations(donations, "Мои донации за " + selectedMonth.format(
+                        DateTimeFormatter.ofPattern("MM.uuuu")));
+            } else if ("1".equals(choice)) {
+                printDonations(donations, "Мои донации");
+            } else {
+                error("Неизвестный вариант поиска.");
+            }
         }
 
         private void doctorDonations() throws SQLException {
             List<Donation> donations = donationDao.findAll();
-            System.out.println("\nПоиск донаций: 1 - все, 2 - по ФИО донора, 0 - назад");
+            System.out.println("\nПоиск донаций: 1 - все, 2 - по месяцу и году, 0 - назад");
             String choice = read("Выберите действие: ");
             if ("0".equals(choice)) return;
             if ("2".equals(choice)) {
-                String query = required("Введите ФИО или часть ФИО: ").toLowerCase(Locale.ROOT);
+                YearMonth selectedMonth = month();
                 donations = donations.stream()
-                        .filter(item -> item.donorName().toLowerCase(Locale.ROOT).contains(query))
+                        .filter(item -> YearMonth.from(item.donationDate()).equals(selectedMonth))
                         .toList();
+                printDonations(donations, "Донации за " + selectedMonth.format(
+                        DateTimeFormatter.ofPattern("MM.uuuu")));
             } else if (!"1".equals(choice)) {
                 error("Неизвестный вариант поиска.");
                 return;
+            } else {
+                printDonations(donations, "Все донации");
             }
-            printDonations(donations, "Донации");
         }
 
         private void printDonations(List<Donation> donations, String title) {
@@ -293,11 +582,13 @@ public class ConsoleUI {
                 System.out.println("Донаций не найдено.");
                 return;
             }
-            donations.forEach(item -> System.out.printf(
-                    "#%d | донор: %s | дата: %s | объём: %d мл | тип: %s | результат: %s | группа: %s%n",
-                    item.id(), item.donorName(), item.donationDate().format(DATE_FORMAT),
+            for (int i = 0; i < donations.size(); i++) {
+                Donation item = donations.get(i);
+                System.out.printf("%d. Донация #%d | донор: %s | дата: %s | объём: %d мл | тип: %s | результат: %s | группа: %s%n",
+                    i + 1, item.id(), item.donorName(), item.donationDate().format(DATE_FORMAT),
                     item.bloodVolume(), donationTypeLabel(item.donationType()),
-                    donationResultLabel(item.result()), item.bloodGroup()));
+                    donationResultLabel(item.result()), item.bloodGroup());
+            }
         }
 
         private void bloodBatchMenu() throws SQLException {
@@ -305,17 +596,17 @@ public class ConsoleUI {
             System.out.println("\nСортировка партий крови: 1 - по объёму (возрастание),"
                     + " 2 - по объёму (убывание), 0 - без сортировки");
             String choice = read("Выберите вариант: ");
+            BloodBatchSorter sorter = null;
             if ("1".equals(choice)) {
-                batches = batches.stream()
-                        .sorted(Comparator.comparingInt(BloodBatch::totalVolume))
-                        .toList();
+                sorter = new AscendingBloodBatchSorter();
             } else if ("2".equals(choice)) {
-                batches = batches.stream()
-                        .sorted(Comparator.comparingInt(BloodBatch::totalVolume).reversed())
-                        .toList();
+                sorter = new DescendingBloodBatchSorter();
             } else if (!"0".equals(choice)) {
                 error("Неизвестный вариант сортировки.");
                 return;
+            }
+            if (sorter != null) {
+                batches = sorter.sort(batches);
             }
             printBatches(batches);
         }
@@ -324,9 +615,8 @@ public class ConsoleUI {
         System.out.println("\n=== Профиль ===");
         System.out.println("ФИО: " + donor.fullName());
         System.out.println("Пол: " + genderLabel(donor.gender()));
-        System.out.println("Дата рождения: " + donor.birthDate().format(DATE_FORMAT));
+        System.out.println("Возраст: " + donor.age() + " лет");
         System.out.println("Email: " + donor.email());
-        System.out.println("Телефон: " + donor.phone());
         System.out.println("Вес: " + donor.weight() + " кг");
         System.out.println("Группа крови: " + donor.bloodGroup());
     }
@@ -337,9 +627,10 @@ public class ConsoleUI {
             System.out.println("Записей на донацию пока нет.");
             return;
         }
-        for (DonationRequest request : requests) {
-            System.out.printf("#%d | дата: %s | статус: %s%n",
-                    request.id(), request.donationDate().format(DATE_FORMAT),
+        for (int i = 0; i < requests.size(); i++) {
+            DonationRequest request = requests.get(i);
+            System.out.printf("%d. Заявка #%d | дата: %s | статус: %s%n",
+                    i + 1, request.id(), request.donationDate().format(DATE_FORMAT),
                     requestStatusLabel(request.status()));
         }
     }
@@ -350,9 +641,11 @@ public class ConsoleUI {
             System.out.println("Медицинских обследований пока нет.");
             return;
         }
-        for (MedicalExamination examination : examinations) {
-            System.out.printf("#%d | дата: %s | гемоглобин: %s | давление: %s | статус: %s%n",
-                    examination.id(), examination.examinationDate().format(DATE_FORMAT),
+        for (int i = 0; i < examinations.size(); i++) {
+            MedicalExamination examination = examinations.get(i);
+            System.out.printf("%d. Обследование #%d | донор: %s | дата: %s | гемоглобин: %s | давление: %s | статус: %s%n",
+                    i + 1, examination.id(), examination.donorName(),
+                    examination.examinationDate().format(DATE_FORMAT),
                     valueOrDash(examination.hemoglobin()), valueOrDash(examination.bloodPressure()),
                     admissionStatusLabel(examination.admissionStatus()));
             System.out.println("  Заключение: " + valueOrDash(examination.conclusion()));
@@ -361,8 +654,8 @@ public class ConsoleUI {
 
     private String genderLabel(String gender) {
         return switch (gender.toLowerCase(Locale.ROOT)) {
-            case "male" -> "мужской";
-            case "female" -> "женский";
+            case "male" -> "муж.";
+            case "female" -> "жен.";
             default -> gender;
         };
     }
@@ -391,8 +684,32 @@ public class ConsoleUI {
     }
 
     private void printBatches(List<BloodBatch> batches) {
-        if (batches.isEmpty()) System.out.println("Партий крови нет.");
-        batches.forEach(System.out::println);
+        System.out.println("\n=== Партии крови ===");
+        if (batches.isEmpty()) {
+            System.out.println("Партий крови нет.");
+            return;
+        }
+        System.out.printf("%-4s %-14s %-8s %-14s %-14s %-12s %-12s%n",
+                "ID", "Номер", "Группа", "Заготовка", "Годна до", "Объём", "Статус");
+        System.out.println("-".repeat(82));
+        for (BloodBatch batch : batches) {
+            System.out.printf("%-4d %-14s %-8s %-14s %-14s %-12s %-12s%n",
+                    batch.id(), batch.batchNumber(), batch.bloodGroup(),
+                    batch.preparationDate().format(DATE_FORMAT),
+                    batch.expirationDate().format(DATE_FORMAT),
+                    batch.totalVolume() + " мл", batchStatusLabel(batch.status()));
+        }
+    }
+
+    private String batchStatusLabel(String status) {
+        return switch (status.toLowerCase(Locale.ROOT)) {
+            case "available" -> "доступна";
+            case "reserved" -> "зарезервирована";
+            case "used" -> "использована";
+            case "expired" -> "просрочена";
+            case "disposed" -> "утилизирована";
+            default -> status;
+        };
     }
 
     private void donorStatistics(Donor donor) throws SQLException {
@@ -403,9 +720,8 @@ public class ConsoleUI {
         report.add(List.of("Статистика донора"));
         report.add(List.of("ФИО", donor.fullName()));
         report.add(List.of("Пол", genderLabel(donor.gender())));
-        report.add(List.of("Дата рождения", donor.birthDate().format(DATE_FORMAT)));
+        report.add(List.of("Возраст", donor.age() + " лет"));
         report.add(List.of("Email", donor.email()));
-        report.add(List.of("Телефон", donor.phone()));
         report.add(List.of("Группа крови", donor.bloodGroup()));
         report.add(List.of("Количество записей на донацию", String.valueOf(requests.size())));
         report.add(List.of("Количество обследований", String.valueOf(examinations.size())));
@@ -508,7 +824,7 @@ public class ConsoleUI {
             return;
         }
         try {
-            var exportedFile = StatisticsExporter.export(report, fileName, format);
+            var exportedFile = ExcelExporter.export(report, fileName, format);
             if (exportedFile == null) {
                 System.out.println("Сохранение отменено.");
             } else {
@@ -580,9 +896,10 @@ public class ConsoleUI {
 
     private String readGender() {
         while (true) {
-            String value = read("Пол (male/female): ").toLowerCase(Locale.ROOT);
-            if (value.equals("male") || value.equals("female")) return value;
-            error("Допустимые значения: male или female.");
+            String value = read("Пол (муж./жен.): ").toLowerCase(Locale.ROOT);
+            if (value.equals("муж") || value.equals("муж." ) || value.equals("male")) return "male";
+            if (value.equals("жен") || value.equals("жен.") || value.equals("female")) return "female";
+            error("Введите «муж.» или «жен.».");
         }
     }
 
@@ -602,16 +919,6 @@ public class ConsoleUI {
         }
     }
 
-    private String phone(String prompt) {
-        while (true) {
-            String value = read(prompt);
-            String digits = value.replaceAll("[\\s()\\-]", "");
-            if (digits.matches("8\\d{10}")) return "+7" + digits.substring(1);
-            if (digits.matches("\\+7\\d{10}")) return digits;
-            error("Введите телефон в формате +79991234567 или 89991234567.");
-        }
-    }
-
     private String password() {
         while (true) {
             String value = required("Пароль: ");
@@ -628,7 +935,18 @@ public class ConsoleUI {
             } catch (NumberFormatException ignored) {
                 // Повторный запрос с понятным сообщением ниже.
             }
+
             error("Введите положительное целое число.");
+        }
+    }
+
+    private BigDecimal decimal(String prompt) {
+        while (true) {
+            try {
+                return new BigDecimal(read(prompt).replace(',', '.'));
+            } catch (NumberFormatException exception) {
+                error("Введите число, например 145 или 145.5.");
+            }
         }
     }
 
@@ -668,7 +986,7 @@ public class ConsoleUI {
     }
 
     private void testConnection() {
-        try (var connection = ru.mirea.project.db.DatabaseConnection.getConnection()) {
+        try (var connection = ru.mirea.project.util.DatabaseManager.getConnection()) {
             System.out.println("Подключение к базе данных успешно.");
         } catch (SQLException exception) {
             databaseError(exception);

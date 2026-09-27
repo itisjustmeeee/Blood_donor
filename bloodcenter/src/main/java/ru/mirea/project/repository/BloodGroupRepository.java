@@ -1,13 +1,13 @@
-package ru.mirea.project.dao;
+package ru.mirea.project.repository;
 
-import ru.mirea.project.db.DatabaseConnection;
+import ru.mirea.project.util.DatabaseManager;
 import ru.mirea.project.model.BloodGroup;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BloodGroupDao {
+public class BloodGroupRepository {
     public void ensureDefaults() throws SQLException {
         String sql = """
                 INSERT INTO blood_group (blood_type, rh_factor)
@@ -15,7 +15,7 @@ public class BloodGroupDao {
                        ('B', '+'), ('B', '-'), ('AB', '+'), ('AB', '-')
                 ON CONFLICT (blood_type, rh_factor) DO NOTHING
                 """;
-        try (var connection = DatabaseConnection.getConnection();
+        try (var connection = DatabaseManager.getConnection();
              var statement = connection.prepareStatement(sql)) {
             statement.executeUpdate();
         }
@@ -24,7 +24,7 @@ public class BloodGroupDao {
     public List<BloodGroup> findAll() throws SQLException {
         String sql = "SELECT blood_group_id, blood_type, rh_factor FROM blood_group ORDER BY blood_group_id";
         List<BloodGroup> result = new ArrayList<>();
-        try (var connection = DatabaseConnection.getConnection();
+        try (var connection = DatabaseManager.getConnection();
              var statement = connection.prepareStatement(sql);
              var rows = statement.executeQuery()) {
             while (rows.next()) {
@@ -34,3 +34,6 @@ public class BloodGroupDao {
         return result;
     }
 }
+
+
+
