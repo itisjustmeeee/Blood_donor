@@ -7,32 +7,8 @@
     <list default="true" id="001732b0-3d5e-41f1-b03c-1ddab191f205" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/reports/donor_1_20260926_225439.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/reports/donor_1_20260926_225520.xlsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/TestConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/TestConnection.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/dao/BloodBatchDao.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/dao/BloodGroupDao.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/dao/DonationDao.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/dao/DonationRequestDao.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/dao/DonorDao.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/dao/MedicalExaminationDao.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/db/DatabaseConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/util/DatabaseManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/model/Donor.java" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/model/Donor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/BloodRequest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/ConsoleUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/ConsoleUI.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/DonationAppointment.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/MedicalExamination.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/MedicalInstitution.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/Notification.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/Role.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/StatisticsExporter.java" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/util/ExcelExporter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/Task.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/ui/User.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bloodcenter/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/util/DatabaseInitializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/util/DatabaseInitializer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/util/DatabaseManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/bloodcenter/src/main/java/ru/mirea/project/util/DatabaseManager.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sql_script/blood_donor.sql" beforeDir="false" afterPath="$PROJECT_DIR$/sql_script/blood_donor.sql" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -54,23 +30,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.000001713417962" />
-      <entry key="MS500" value="1.2873877873768345" />
-      <entry key="S2" value="7.435469676547589" />
-      <entry key="S5" value="15.881541415965522" />
-      <entry key="S10" value="21.564635418539886" />
-      <entry key="S30" value="35.40270031539025" />
-      <entry key="S60" value="49.28112979407309" />
-      <entry key="M2" value="61.69438612626537" />
-      <entry key="M5" value="89.13189869390938" />
-      <entry key="M10" value="190.1240595196886" />
-      <entry key="M15" value="320.8642087180149" />
-      <entry key="M30" value="694.2432983798158" />
-      <entry key="H1" value="1273.6656060457628" />
-      <entry key="H2" value="2224.5202040505947" />
-      <entry key="H4" value="3533.977373076147" />
-      <entry key="D1" value="6296.652587654846" />
-      <entry key="W1" value="7147.162078931592" />
+      <entry key="MS100" value="1.4538717280283795" />
+      <entry key="MS500" value="2.432336689992363" />
+      <entry key="S2" value="7.787309861391638" />
+      <entry key="S5" value="19.387921552256742" />
+      <entry key="S10" value="38.41509967013912" />
+      <entry key="S30" value="95.2295442551063" />
+      <entry key="S60" value="167.45578709492528" />
+      <entry key="M2" value="265.67729413194314" />
+      <entry key="M5" value="395.2450982698119" />
+      <entry key="M10" value="512.4136572035201" />
+      <entry key="M15" value="630.8765736444888" />
+      <entry key="M30" value="989.5615343495342" />
+      <entry key="H1" value="1583.2452171358452" />
+      <entry key="H2" value="2557.7226615250615" />
+      <entry key="H4" value="3902.745273316177" />
+      <entry key="D1" value="6764.452469753265" />
+      <entry key="W1" value="7650.310434719402" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -78,37 +54,37 @@
       <entry key="S2" value="0.0" />
       <entry key="S5" value="0.0" />
       <entry key="S10" value="0.0" />
-      <entry key="S30" value="3.665664457889186E-253" />
-      <entry key="S60" value="6.056210849221655E-127" />
-      <entry key="M2" value="7.967459826542973E-64" />
-      <entry key="M5" value="7.651531495726067E-26" />
-      <entry key="M10" value="4.360964919526112E-13" />
-      <entry key="M15" value="8.11866890324604E-9" />
-      <entry key="M30" value="1.5444576290688826E-4" />
-      <entry key="H1" value="0.021470993581861476" />
-      <entry key="H2" value="0.2536402054031298" />
-      <entry key="H4" value="0.8721742812868616" />
-      <entry key="D1" value="2.4417007457333217" />
-      <entry key="W1" value="2.9130335453785956" />
+      <entry key="S30" value="1.8296480489606058E-261" />
+      <entry key="S60" value="4.278666245957588E-131" />
+      <entry key="M2" value="6.696896614342642E-66" />
+      <entry key="M5" value="1.1312793379042565E-26" />
+      <entry key="M10" value="1.6768466035558305E-13" />
+      <entry key="M15" value="4.292977957502751E-9" />
+      <entry key="M30" value="1.1230857385809537E-4" />
+      <entry key="H1" value="0.01830925187514621" />
+      <entry key="H2" value="0.23422180568086207" />
+      <entry key="H4" value="0.8381232536829071" />
+      <entry key="D1" value="2.4255479894055485" />
+      <entry key="W1" value="2.910272737057095" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.9726566043127268" />
-      <entry key="MS500" value="1.2800737021803579" />
-      <entry key="S2" value="7.424405160598236" />
-      <entry key="S5" value="15.872150316983106" />
-      <entry key="S10" value="21.558280430442196" />
-      <entry key="S30" value="35.399250722982934" />
-      <entry key="S60" value="49.27874047505981" />
-      <entry key="M2" value="61.692894410305" />
-      <entry key="M5" value="89.13103152623283" />
-      <entry key="M10" value="190.12311826886634" />
-      <entry key="M15" value="320.8631398669162" />
-      <entry key="M30" value="694.2422766007986" />
-      <entry key="H1" value="1273.6859531926075" />
-      <entry key="H2" value="2224.7727210736907" />
-      <entry key="H4" value="3534.8484634348165" />
-      <entry key="D1" value="6299.093858065297" />
-      <entry key="W1" value="7150.075038279977" />
+      <entry key="MS100" value="1.3820262664613625" />
+      <entry key="MS500" value="2.4047474532830613" />
+      <entry key="S2" value="7.7618002071447885" />
+      <entry key="S5" value="19.357126899407923" />
+      <entry key="S10" value="38.37941705739951" />
+      <entry key="S30" value="95.20293828011432" />
+      <entry key="S60" value="167.43690366658444" />
+      <entry key="M2" value="265.664778266893" />
+      <entry key="M5" value="395.23862457231303" />
+      <entry key="M10" value="512.4098039343442" />
+      <entry key="M15" value="630.8736003894547" />
+      <entry key="M30" value="989.5595442784161" />
+      <entry key="H1" value="1583.2619331892065" />
+      <entry key="H2" value="2557.955525813605" />
+      <entry key="H4" value="3903.5821940682995" />
+      <entry key="D1" value="6766.877563335184" />
+      <entry key="W1" value="7653.220629481667" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
