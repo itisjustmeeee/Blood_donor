@@ -1,0 +1,117 @@
+.root {
+    -fx-font-family: "Segoe UI";
+    -fx-base: #f5f7fb;
+    -fx-accent: #2e7d32;
+    -fx-default-button: #2e7d32;
+}
+
+.label {
+    -fx-text-fill: #1f2937;
+}
+
+.title {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1d4ed8;
+}
+
+.section-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0f172a;
+}
+
+.header {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0f172a;
+}
+
+.button {
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 8px;
+    -fx-wrap-text: true;
+    -fx-text-alignment: center;
+    -fx-min-width: 150px;
+    -fx-max-width: 240px;
+    -fx-min-height: 36px;
+}
+
+.primary-button {
+    -fx-background-color: #2e7d32;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.secondary-button {
+    -fx-background-color: #dbeafe;
+    -fx-text-fill: #1f2937;
+    -fx-font-weight: bold;
+}
+
+.warning-button {
+    -fx-background-color: #fef3c7;
+    -fx-text-fill: #78350f;
+    -fx-font-weight: bold;
+}
+
+.filter-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #475569;
+    -fx-wrap-text: true;
+    -fx-pref-width: 155px;
+    -fx-max-width: 180px;
+}
+
+.table-view {
+    -fx-background-color: white;
+    -fx-border-color: #d1d5db;
+    -fx-border-radius: 8px;
+    -fx-min-height: 180px;
+}
+
+.table-view .placeholder .label {
+    -fx-text-fill: #64748b;
+}
+
+.button:disabled {
+    -fx-opacity: 0.48;
+    -fx-background-color: #cbd5e1;
+    -fx-text-fill: #64748b;
+}
+
+.table-column {
+    -fx-alignment: CENTER-LEFT;
+}
+
+.text-field, .combo-box, .date-picker, .text-area, .spinner {
+    -fx-background-color: white;
+    -fx-border-color: #cbd5e1;
+    -fx-border-radius: 6px;
+}
+
+.login-root {
+    -fx-background-color: linear-gradient(to bottom, #eef6ff, #f8fafc);
+}
+
+.main-root {
+    -fx-background-color: #f8fafc;
+}
+
+.page-scroll {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.page-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.stats-panel {
+    -fx-background-color: #f1f5f9;
+    -fx-padding: 14px;
+    -fx-border-radius: 10px;
+    -fx-border-color: #cbd5e1;
+}
