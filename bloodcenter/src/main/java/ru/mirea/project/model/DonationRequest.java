@@ -7,6 +7,7 @@ public record DonationRequest(
         int donorId,
         LocalDate donationDate,
         String status,
-        String donorName) {
+        String donorName,
+        String bloodGroup) {
 
 }

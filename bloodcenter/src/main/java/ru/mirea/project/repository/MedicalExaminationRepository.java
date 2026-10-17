@@ -113,6 +113,7 @@ public class MedicalExaminationRepository {
                 if (!rows.next()) {
                     throw new SQLException("Медицинское обследование не найдено.");
                 }
+
                 requestId = rows.getInt(1);
             }
             donationStatement.setInt(1, examinationId);
@@ -129,6 +130,18 @@ public class MedicalExaminationRepository {
             connection.commit();
         } catch (SQLException exception) {
             throw exception;
+        }
+    }
+
+    public void cancelWithRequest(int examinationId) throws SQLException {
+        String sql = """
+                UPDATE donation_request SET request_status='cancelled'::request_status
+                WHERE request_id=(SELECT request_id FROM medical_examination WHERE examination_id=?)
+                """;
+        try (var connection = DatabaseManager.getConnection();
+                var statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, examinationId);
+            statement.executeUpdate();
         }
     }
 

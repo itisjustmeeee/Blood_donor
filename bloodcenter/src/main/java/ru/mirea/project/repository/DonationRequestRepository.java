@@ -11,8 +11,11 @@ import java.util.List;
 
 public class DonationRequestRepository {
     private static final String SELECT = """
-            SELECT r.request_id, r.donor_id, r.donation_date, r.request_status::text, d.full_name
-            FROM donation_request r JOIN donor d ON d.donor_id=r.donor_id
+            SELECT r.request_id, r.donor_id, r.donation_date, r.request_status::text, d.full_name,
+                   bg.blood_type || bg.rh_factor
+            FROM donation_request r
+            JOIN donor d ON d.donor_id=r.donor_id
+            JOIN blood_group bg ON bg.blood_group_id=d.blood_group_id
             """;
 
     public DonationRequest create(int donorId, LocalDate date, String status) throws SQLException {
@@ -93,6 +96,30 @@ public class DonationRequestRepository {
         }
     }
 
+    public void update(int requestId, LocalDate date, String status) throws SQLException {
+        String sql = "UPDATE donation_request SET donation_date=?, request_status=?::request_status WHERE request_id=?";
+        try (var connection = DatabaseManager.getConnection();
+                var statement = connection.prepareStatement(sql)) {
+            statement.setDate(1, Date.valueOf(date));
+            statement.setString(2, status);
+            statement.setInt(3, requestId);
+            statement.executeUpdate();
+        }
+    }
+
+    public List<DonationRequest> findConfirmedWithoutDonation() throws SQLException {
+        return find(SELECT + """
+                WHERE r.request_status='confirmed'
+                  AND EXISTS (SELECT 1 FROM medical_examination e
+                              WHERE e.request_id=r.request_id
+                                AND e.admission_status='accepted')
+                  AND NOT EXISTS (SELECT 1 FROM donation d
+                                  JOIN medical_examination e ON e.examination_id=d.examination_id
+                                  WHERE e.request_id=r.request_id)
+                ORDER BY r.donation_date, r.request_id
+                """);
+    }
+
     private List<DonationRequest> find(String sql, Integer... parameters) throws SQLException {
         List<DonationRequest> result = new ArrayList<>();
         try (var connection = DatabaseManager.getConnection();
@@ -102,7 +129,8 @@ public class DonationRequestRepository {
             try (var rows = statement.executeQuery()) {
                 while (rows.next())
                     result.add(new DonationRequest(rows.getInt(1), rows.getInt(2),
-                            rows.getDate(3).toLocalDate(), rows.getString(4), rows.getString(5)));
+                            rows.getDate(3).toLocalDate(), rows.getString(4), rows.getString(5),
+                            rows.getString(6)));
             }
         }
         return result;

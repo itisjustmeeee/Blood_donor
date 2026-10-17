@@ -154,7 +154,18 @@ public class DonationRepository {
                         rows.getInt(3), rows.getDate(4).toLocalDate(), rows.getInt(5),
                         rows.getString(6), rows.getString(7), rows.getString(8), rows.getString(9)));
         }
+
         return result;
+    }
+
+    public void updateResult(int donationId, String result) throws SQLException {
+        String sql = "UPDATE donation SET result=?::donation_result WHERE donation_id=?";
+        try (var connection = DatabaseManager.getConnection();
+                var statement = connection.prepareStatement(sql)) {
+            statement.setString(1, result);
+            statement.setInt(2, donationId);
+            statement.executeUpdate();
+        }
     }
 
     private Donation findById(int donationId) throws SQLException {

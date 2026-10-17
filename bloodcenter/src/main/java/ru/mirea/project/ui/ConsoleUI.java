@@ -121,7 +121,6 @@ public class ConsoleUI {
     private void register() {
         try {
             System.out.println("\n=== Регистрация ===");
-            String role = readRole();
             String surname = personName("Фамилия: ");
             String firstName = personName("Имя: ");
             String patronymic = personName("Отчество: ");
@@ -138,7 +137,7 @@ public class ConsoleUI {
                 return;
             }
             BloodGroup group = chooseGroup(groups);
-            Donor donor = donorService.register(name, age, role, gender, weight, email,
+            Donor donor = donorService.register(name, age, "donor", gender, weight, email,
                     password, group.id());
             System.out.println("Регистрация завершена. Идентификатор: " + donor.id());
         } catch (BusinessException exception) {
@@ -906,17 +905,6 @@ public class ConsoleUI {
             if (value.equals("+") || value.equals("-"))
                 return value;
             error("Резус-фактор должен быть указан как + или -.");
-        }
-    }
-
-    private String readRole() {
-        while (true) {
-            String value = read("Роль (1 - донор, 2 - врач): ");
-            if ("1".equals(value))
-                return "donor";
-            if ("2".equals(value))
-                return "doctor";
-            error("Выберите 1 или 2.");
         }
     }
 

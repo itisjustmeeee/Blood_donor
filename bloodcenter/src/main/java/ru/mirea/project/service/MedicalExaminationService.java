@@ -67,8 +67,12 @@ public class MedicalExaminationService {
 
     public void deleteForDonor(int examinationId, Donor donor)
             throws SQLException, BusinessException {
-        findOwned(examinationId, donor);
-        examinationDao.deleteWithRequest(examinationId);
+        MedicalExamination examination = findOwned(examinationId, donor);
+        if (!"pending".equalsIgnoreCase(examination.admissionStatus())) {
+            throw new ExaminationValidationException(
+                    "Удалить можно только обследование со статусом «на рассмотрении».");
+        }
+        examinationDao.cancelWithRequest(examinationId);
     }
 
     public void updateDateForDoctor(int examinationId, LocalDate date)
