@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.mirea.project.ui.MainController" maxWidth="Infinity" maxHeight="Infinity" styleClass="main-root">
+    <top>
+        <HBox spacing="14" alignment="CENTER_LEFT" maxWidth="Infinity">
+            <Label fx:id="welcomeLabel" styleClass="header"/>
+        </HBox>
+    </top>
+    <center><TabPane fx:id="tabs" maxWidth="Infinity" maxHeight="Infinity"/></center>
+</BorderPane>

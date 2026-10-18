@@ -695,6 +695,7 @@ public class ConsoleUI {
             case "pending" -> "ожидает решения";
             case "accepted" -> "допущен";
             case "rejected" -> "не допущен";
+            case "cancelled" -> "отменена";
             default -> status;
         };
     }
@@ -792,6 +793,8 @@ public class ConsoleUI {
                 .filter(e -> "rejected".equalsIgnoreCase(e.admissionStatus())).count())));
         report.add(List.of("Ожидают решения", String.valueOf(examinations.stream()
                 .filter(e -> "pending".equalsIgnoreCase(e.admissionStatus())).count())));
+        report.add(List.of("Отменённые обследования", String.valueOf(examinations.stream()
+                .filter(e -> "cancelled".equalsIgnoreCase(e.admissionStatus())).count())));
         report.add(List.of("Количество фактических донаций", String.valueOf(donations.size())));
         report.add(List.of("Общий объём крови, мл",
                 String.valueOf(donations.stream().mapToInt(Donation::bloodVolume).sum())));

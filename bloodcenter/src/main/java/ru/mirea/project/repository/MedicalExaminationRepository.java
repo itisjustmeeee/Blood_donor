@@ -28,7 +28,7 @@ public class MedicalExaminationRepository {
                 var statement = connection.prepareStatement(sql)) {
             statement.setInt(1, requestId);
             statement.setDate(2, Date.valueOf(date));
-            statement.setBigDecimal(3, hemoglobin);
+            statement.setObject(3, hemoglobin);
             try (var rows = statement.executeQuery()) {
                 rows.next();
                 return findById(rows.getInt(1));
@@ -84,6 +84,7 @@ public class MedicalExaminationRepository {
                 if (!rows.next()) {
                     throw new SQLException("Медицинское обследование не найдено.");
                 }
+
                 requestId = rows.getInt(1);
             }
             examinationStatement.setDate(1, Date.valueOf(date));
@@ -93,6 +94,23 @@ public class MedicalExaminationRepository {
             requestStatement.setInt(2, requestId);
             requestStatement.executeUpdate();
             connection.commit();
+        }
+    }
+
+    public void reopenCancelled(int examinationId, LocalDate date) throws SQLException {
+        String sql = """
+                UPDATE medical_examination
+                SET examination_date=?, hemoglobin=NULL, blood_pressure=NULL,
+                    conclusion=NULL, admission_status='pending'::admission_status
+                WHERE examination_id=? AND admission_status='cancelled'::admission_status
+                """;
+        try (var connection = DatabaseManager.getConnection();
+                var statement = connection.prepareStatement(sql)) {
+            statement.setDate(1, Date.valueOf(date));
+            statement.setInt(2, examinationId);
+            if (statement.executeUpdate() != 1) {
+                throw new SQLException("Отменённое обследование для повторной записи не найдено.");
+            }
         }
     }
 
@@ -141,6 +159,16 @@ public class MedicalExaminationRepository {
         try (var connection = DatabaseManager.getConnection();
                 var statement = connection.prepareStatement(sql)) {
             statement.setInt(1, examinationId);
+            statement.executeUpdate();
+        }
+    }
+
+    public void updateStatus(int examinationId, String status) throws SQLException {
+        String sql = "UPDATE medical_examination SET admission_status=CAST(? AS admission_status) WHERE examination_id=?";
+        try (var connection = DatabaseManager.getConnection();
+                var statement = connection.prepareStatement(sql)) {
+            statement.setString(1, status);
+            statement.setInt(2, examinationId);
             statement.executeUpdate();
         }
     }

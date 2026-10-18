@@ -8,8 +8,8 @@ import ru.mirea.project.model.*;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.List;
 import java.math.BigDecimal;
+import java.util.List;
 
 public class DonationService {
     private static final int MIN_WEIGHT = 50;
@@ -39,6 +39,38 @@ public class DonationService {
         return request;
     }
 
+    public DonationRequest bookExamination(Donor donor, LocalDate date)
+            throws SQLException, BusinessException {
+        validateDonor(donor);
+        List<DonationRequest> requests = requestDao.findByDonor(donor.id());
+        List<MedicalExamination> examinations = examinationDao.findByDonor(donor.id());
+        DonationRequest request = requests.stream()
+                .filter(item -> "created".equalsIgnoreCase(item.status()))
+                .filter(item -> examinations.stream()
+                        .filter(examination -> examination.requestId() == item.id())
+                        .allMatch(examination ->
+                                "cancelled".equalsIgnoreCase(examination.admissionStatus())))
+                .findFirst()
+                .orElseThrow(() -> new DonationEligibilityException(
+                        "Сначала создайте заявку на донацию со статусом «создано»."));
+        if (date.isBefore(request.donationDate())) {
+            throw new DonationEligibilityException(
+                    "Дата обследования не может быть раньше даты записи на донацию.");
+        }
+        MedicalExamination cancelledExamination = examinations.stream()
+                .filter(examination -> examination.requestId() == request.id())
+                .filter(examination -> "cancelled".equalsIgnoreCase(examination.admissionStatus()))
+                .findFirst()
+                .orElse(null);
+        if (cancelledExamination == null) {
+            examinationDao.create(request.id(), date, null);
+        } else {
+            examinationDao.reopenCancelled(cancelledExamination.id(), date);
+        }
+        requestDao.updateStatus(request.id(), "confirmed");
+        return request;
+    }
+
     private void validateHemoglobin(Donor donor, BigDecimal hemoglobin) throws BusinessException {
         if (hemoglobin == null) {
             throw new DonationEligibilityException("Необходимо указать гемоглобин для записи на обследование.");
@@ -58,24 +90,6 @@ public class DonationService {
     public DonationRequest bookDonation(Donor donor, LocalDate date)
             throws SQLException, BusinessException {
         validateDonor(donor);
-        List<Integer> usedExaminationIds = donationDao.findByDonor(donor.id()).stream()
-                .map(Donation::examinationId)
-                .toList();
-        List<MedicalExamination> accepted = examinationDao.findByDonor(donor.id()).stream()
-                .filter(item -> "accepted".equalsIgnoreCase(item.admissionStatus()))
-                .filter(item -> !usedExaminationIds.contains(item.id()))
-                .toList();
-        if (accepted.isEmpty()) {
-            throw new DonationEligibilityException(
-                    "Для записи на донацию необходимо одно положительное обследование без донации.");
-        }
-        LocalDate lastExamination = accepted.stream()
-                .map(MedicalExamination::examinationDate)
-                .max(LocalDate::compareTo)
-                .orElseThrow();
-        if (date.isBefore(lastExamination)) {
-            throw new DonationEligibilityException("Дата донации не может быть раньше даты медицинского обследования.");
-        }
         if (requestDao.hasPendingRequest(donor.id())) {
             throw new DonationEligibilityException("У донора уже есть нерассмотренная заявка на донацию.");
         }

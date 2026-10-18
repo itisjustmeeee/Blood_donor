@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.mirea.project.ui.LoginController" alignment="CENTER" spacing="18" maxWidth="Infinity" maxHeight="Infinity" styleClass="login-root">
+    <padding><Insets top="28" right="28" bottom="28" left="28"/></padding>
+    <Label text="Центр донорства крови" styleClass="title"/>
+    <GridPane hgap="12" vgap="12" alignment="CENTER">
+        <Label text="Email" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+        <TextField fx:id="emailField" promptText="example@mail.com" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+        <Label text="Пароль" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <PasswordField fx:id="passwordField" promptText="Введите пароль" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+    </GridPane>
+    <HBox spacing="12" alignment="CENTER">
+        <Button text="Войти" onAction="#login" styleClass="primary-button"/>
+        <Button text="Регистрация" onAction="#register" styleClass="secondary-button"/>
+    </HBox>
+</VBox>

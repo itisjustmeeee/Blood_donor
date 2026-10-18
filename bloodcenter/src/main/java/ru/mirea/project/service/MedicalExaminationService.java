@@ -47,10 +47,16 @@ public class MedicalExaminationService {
             throw new ExaminationValidationException("Гемоглобин вне нормы для пола донора. Норма: " + range + " г/л.");
         }
         examinationDao.updateResult(examinationId, hemoglobin, pressure, conclusion, status);
+        if ("rejected".equalsIgnoreCase(status)) {
+            requestDao.updateStatus(requestId, "cancelled");
+        }
     }
 
     public void updateDateForDonor(int examinationId, Donor donor, LocalDate date)
             throws SQLException, BusinessException {
+        if (date == null) {
+            throw new ExaminationValidationException("Укажите дату обследования.");
+        }
         MedicalExamination examination = findOwned(examinationId, donor);
         var request = requestDao.findById(examination.requestId());
         if (request == null) {
@@ -62,6 +68,10 @@ public class MedicalExaminationService {
             throw new ExaminationValidationException(
                     "Изменять дату можно только у активной записи без вынесенного заключения.");
         }
+        if (date.isBefore(request.donationDate())) {
+            throw new ExaminationValidationException(
+                    "Дата обследования не может быть раньше даты заявки на донацию.");
+        }
         examinationDao.updateDate(examinationId, date);
     }
 
@@ -72,7 +82,8 @@ public class MedicalExaminationService {
             throw new ExaminationValidationException(
                     "Удалить можно только обследование со статусом «на рассмотрении».");
         }
-        examinationDao.cancelWithRequest(examinationId);
+        examinationDao.updateStatus(examinationId, "cancelled");
+        requestDao.updateStatus(examination.requestId(), "created");
     }
 
     public void updateDateForDoctor(int examinationId, LocalDate date)
@@ -98,6 +109,9 @@ public class MedicalExaminationService {
         MedicalExamination examination = examinationDao.findById(examinationId);
         if (examination == null) {
             throw new EntityNotFoundException("Медицинское обследование не найдено.");
+        }
+        if ("cancelled".equalsIgnoreCase(examination.admissionStatus())) {
+            throw new ExaminationValidationException("Отменённое обследование нельзя обработать.");
         }
         process(examination.id(), examination.requestId(), hemoglobin, pressure, conclusion, status);
     }
