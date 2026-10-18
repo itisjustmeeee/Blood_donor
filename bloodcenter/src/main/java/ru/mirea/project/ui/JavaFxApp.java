@@ -2,6 +2,7 @@ package ru.mirea.project.ui;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -17,6 +18,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.fxml.FXMLLoader;
+import javafx.event.ActionEvent;
+import javafx.scene.Parent;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
@@ -72,6 +76,10 @@ public class JavaFxApp extends Application {
     private final ObservableList<MedicalExamination> examinationRows = FXCollections.observableArrayList();
     private final ObservableList<Donation> donationRows = FXCollections.observableArrayList();
     private final ObservableList<BloodBatch> batchRows = FXCollections.observableArrayList();
+    private final List<Runnable> statisticsRefreshers = new ArrayList<>();
+    private final List<Runnable> tableRefreshers = new ArrayList<>();
+    private Button donorExaminationButton;
+    private Button donorDonationButton;
 
     private Stage stage;
     private Donor currentUser;
@@ -82,19 +90,53 @@ public class JavaFxApp extends Application {
         stage.setTitle("Центр донорства крови");
         stage.setMinWidth(800);
         stage.setMinHeight(520);
-        try {
-            DatabaseInitializer.initialize();
-            if (donorRepository.findAll().isEmpty()) {
-                TestDataSeeder.seed();
+        showLoadingScene();
+        Task<Void> initialization = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                DatabaseInitializer.initialize();
+                if (donorRepository.findAll().isEmpty()) {
+                    TestDataSeeder.seed();
+                }
+
+                return null;
             }
-        } catch (SQLException exception) {
-            showError("Ошибка подключения к базе данных", exception.getMessage());
-            return;
-        }
-        showLoginScene();
+        };
+        initialization.setOnSucceeded(event -> showLoginScene());
+        initialization.setOnFailed(event ->
+                showError("Ошибка подключения к базе данных",
+                        initialization.getException() == null
+                                ? "Неизвестная ошибка."
+                                : initialization.getException().getMessage()));
+        Thread thread = new Thread(initialization, "database-initialization");
+        thread.setDaemon(true);
+        thread.start();
     }
 
-    private void showLoginScene() {
+    private void showLoadingScene() {
+        VBox loading = new VBox(14, new Label("Подключение к базе данных..."),
+                new ProgressIndicator());
+        loading.setAlignment(Pos.CENTER);
+        stage.setScene(new Scene(loading, 420, 220));
+        stage.show();
+    }
+
+    public void showLoginScene() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
+            Parent root = loader.load();
+            loader.<LoginController>getController().setApplication(this);
+            stage.setScene(new Scene(root, 460, 300));
+            stage.getScene().getStylesheets().add(Objects.requireNonNull(
+                    getClass().getResource("/styles.css")).toExternalForm());
+            stage.show();
+            stage.sizeToScene();
+        } catch (IOException exception) {
+            showError("Ошибка интерфейса", "Не удалось загрузить окно входа: " + exception.getMessage());
+        }
+    }
+
+    private void showLegacyLoginScene() {
         VBox root = new VBox(18);
         root.setPadding(new Insets(28));
         root.setAlignment(Pos.CENTER);
@@ -142,9 +184,10 @@ public class JavaFxApp extends Application {
         stage.getScene().getStylesheets().add(Objects.requireNonNull(
                 getClass().getResource("/styles.css")).toExternalForm());
         stage.show();
+        stage.sizeToScene();
     }
 
-    private void handleLogin(String email, String password) {
+    public void handleLogin(String email, String password) {
         if (email.isBlank() || password.isBlank()) {
             showError("Ошибка входа", "Email и пароль обязательны для заполнения.");
             return;
@@ -162,14 +205,15 @@ public class JavaFxApp extends Application {
         }
     }
 
-    private void openRegistrationDialog() {
+    public void openRegistrationDialog() {
         Dialog<Donor> dialog = new Dialog<>();
         dialog.setTitle("Регистрация пользователя");
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.initOwner(stage);
 
         ButtonType saveButtonType = new ButtonType("Зарегистрировать", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
+        dialog.getDialogPane().getButtonTypes().addAll(
+                saveButtonType, new ButtonType("Отмена", ButtonBar.ButtonData.CANCEL_CLOSE));
 
         GridPane grid = new GridPane();
         grid.setVgap(10);
@@ -181,6 +225,17 @@ public class JavaFxApp extends Application {
         TextField ageField = new TextField();
         ageField.setPromptText("Возраст");
         ComboBox<String> genderBox = new ComboBox<>(FXCollections.observableArrayList("male", "female", "other"));
+        genderBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(String value) {
+                return value == null ? "" : localizeGender(value);
+            }
+
+            @Override
+            public String fromString(String value) {
+                return value;
+            }
+        });
         genderBox.setValue("male");
         TextField weightField = new TextField();
         weightField.setPromptText("Вес (кг)");
@@ -213,40 +268,38 @@ public class JavaFxApp extends Application {
         grid.add(bloodGroupBox, 1, 7);
         dialog.getDialogPane().setContent(grid);
 
-        dialog.setResultConverter(buttonType -> {
-            if (buttonType != saveButtonType) {
-                return null;
-            }
+        Button saveButton = (Button) dialog.getDialogPane().lookupButton(saveButtonType);
+        Donor[] registrationResult = new Donor[1];
+        saveButton.addEventFilter(ActionEvent.ACTION, event -> {
             if (fullNameField.getText() == null || fullNameField.getText().isBlank()) {
                 showError("Ошибка регистрации", "ФИО обязательно для заполнения.");
-                return null;
+                event.consume();
+                return;
             }
             try {
-                int age = Integer.parseInt(ageField.getText());
-                int weight = Integer.parseInt(weightField.getText());
+                int age = Integer.parseInt(ageField.getText().trim());
+                int weight = Integer.parseInt(weightField.getText().trim());
                 BloodGroup group = bloodGroupBox.getValue();
                 if (group == null) {
                     showError("Ошибка регистрации", "Не выбрана группа крови.");
-                    return null;
+                    event.consume();
+                    return;
                 }
-                Donor donor = donorService.register(
-                        fullNameField.getText().trim(),
-                        age,
-                        "donor",
-                        genderBox.getValue(),
-                        weight,
-                        emailField.getText().trim(),
-                        passwordField.getText(),
-                        group.id());
+                registrationResult[0] = donorService.register(
+                        fullNameField.getText().trim(), age, "donor", genderBox.getValue(),
+                        weight, emailField.getText().trim(), passwordField.getText(), group.id());
                 showInfo("Регистрация завершена", "Пользователь успешно зарегистрирован.");
-                return donor;
             } catch (NumberFormatException exception) {
                 showError("Ошибка регистрации", "Возраст и вес должны быть числами.");
-                return null;
+                event.consume();
             } catch (BusinessException | SQLException exception) {
                 showError("Ошибка регистрации", exception.getMessage());
-                return null;
+                event.consume();
             }
+        });
+
+        dialog.setResultConverter(buttonType -> {
+            return buttonType == saveButtonType ? registrationResult[0] : null;
         });
 
         Optional<Donor> result = dialog.showAndWait();
@@ -256,7 +309,22 @@ public class JavaFxApp extends Application {
         });
     }
 
-    private void showMainScene() {
+    public void showMainScene() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/main.fxml"));
+            Parent root = loader.load();
+            loader.<MainController>getController().setApplication(this);
+            stage.setScene(new Scene(root, 920, 600));
+            stage.getScene().getStylesheets().add(Objects.requireNonNull(
+                    getClass().getResource("/styles.css")).toExternalForm());
+            stage.show();
+            stage.sizeToScene();
+        } catch (IOException exception) {
+            showError("Ошибка интерфейса", "Не удалось загрузить основное окно: " + exception.getMessage());
+        }
+    }
+
+    private void showLegacyMainScene() {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("main-root");
         root.setPadding(new Insets(16));
@@ -284,7 +352,7 @@ public class JavaFxApp extends Application {
         stage.show();
     }
 
-    private TabPane buildDonorTabs() {
+    public TabPane buildDonorTabs() {
         TabPane tabs = new TabPane();
 
         Tab profileTab = new Tab("Профиль");
@@ -300,13 +368,13 @@ public class JavaFxApp extends Application {
         donationTab.setContent(scrollable(buildMyDonationTab()));
 
         Tab statsTab = new Tab("Статистика");
-        statsTab.setContent(scrollable(buildStatisticsTab(currentUser.id())));
+        statsTab.setContent(scrollable(new StatisticsPane(this, currentUser.id()).create()));
 
         tabs.getTabs().addAll(profileTab, examTab, requestTab, donationTab, statsTab);
         return tabs;
     }
 
-    private TabPane buildDoctorTabs() {
+    public TabPane buildDoctorTabs() {
         TabPane tabs = new TabPane();
 
         Tab donorTab = new Tab("Доноры");
@@ -325,17 +393,26 @@ public class JavaFxApp extends Application {
         batchTab.setContent(scrollable(buildBatchTab()));
 
         Tab statsTab = new Tab("Статистика");
-        statsTab.setContent(scrollable(buildStatisticsTab(null)));
+        statsTab.setContent(scrollable(new StatisticsPane(this, null).create()));
 
         tabs.getTabs().addAll(donorTab, examTab, requestTab, donationTab, batchTab, statsTab);
         return tabs;
     }
 
+    public Donor getCurrentUser() {
+        return currentUser;
+    }
+
+    public TabPane buildCurrentUserTabs() {
+        return "doctor".equalsIgnoreCase(currentUser.role())
+                ? new DoctorView(this).create() : new DonorView(this).create();
+    }
+
     private ScrollPane scrollable(Node content) {
         ScrollPane scrollPane = new ScrollPane(content);
         scrollPane.setPannable(true);
-        scrollPane.setFitToWidth(false);
-        scrollPane.setFitToHeight(false);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.getStyleClass().add("page-scroll");
@@ -387,7 +464,14 @@ public class JavaFxApp extends Application {
         updateButton.getStyleClass().add("primary-button");
         updateButton.setOnAction(event -> openProfileEditor());
 
-        box.getChildren().addAll(title, info, updateButton);
+        Button logoutButton = new Button("Выйти из профиля");
+        logoutButton.getStyleClass().add("secondary-button");
+        logoutButton.setOnAction(event -> {
+            currentUser = null;
+            showLoginScene();
+        });
+
+        box.getChildren().addAll(title, info, updateButton, logoutButton);
         return box;
     }
 
@@ -397,14 +481,18 @@ public class JavaFxApp extends Application {
 
         HBox toolbar = new HBox(10);
         ComboBox<String> status = new ComboBox<>(FXCollections.observableArrayList(
-                "Все", "на рассмотрении", "допущен(а)", "не допущен(а)"));
+                "Все", "на рассмотрении", "допущен(а)", "не допущен(а)", "отменена"));
         status.setValue("Все");
         Button addButton = new Button("Записаться на обследование");
+        donorExaminationButton = addButton;
         addButton.getStyleClass().add("primary-button");
-        Button deleteButton = new Button("Удалить запись");
+        Button deleteButton = new Button("Отменить запись");
         deleteButton.getStyleClass().add("warning-button");
+        Button editButton = new Button("Изменить обследование");
+        editButton.getStyleClass().add("secondary-button");
         DatePicker from = new DatePicker();
         DatePicker to = new DatePicker();
+        constrainDateRange(from, to);
 
         TableView<MedicalExamination> table = new TableView<>();
         TableColumn<MedicalExamination, String> dateCol = new TableColumn<>("Дата обследования");
@@ -426,18 +514,19 @@ public class JavaFxApp extends Application {
         deleteButton.setOnAction(event -> {
             MedicalExamination selected = table.getSelectionModel().getSelectedItem();
             if (selected == null) {
-                showError("Выбор записи", "Сначала выберите обследование для удаления.");
+                showError("Выбор записи", "Сначала выберите обследование для отмены.");
                 return;
             }
             confirmDelete(() -> {
                 try {
                     examinationService.deleteForDonor(selected.id(), currentUser);
                     refreshDonorData();
+                    table.setItems(examinationRows);
                     showInfo("Удаление", "Запись на обследование отменена.");
                 } catch (BusinessException | SQLException exception) {
-                    showError("Ошибка удаления", exception.getMessage());
+                    showError("Ошибка отмены", exception.getMessage());
                 }
-            }, "Удалить запись на обследование?");
+            }, "Отменить запись на обследование?");
         });
         status.valueProperty().addListener((obs, oldValue, newValue) ->
                 applyExaminationFilter(table, newValue, from.getValue(), to.getValue()));
@@ -445,8 +534,21 @@ public class JavaFxApp extends Application {
                 applyExaminationFilter(table, status.getValue(), newValue, to.getValue()));
         to.valueProperty().addListener((obs, oldValue, newValue) ->
                 applyExaminationFilter(table, status.getValue(), from.getValue(), newValue));
+        table.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, selected) -> {
+            boolean pending = selected != null && "pending".equalsIgnoreCase(selected.admissionStatus());
+            deleteButton.setDisable(!pending);
+            editButton.setDisable(!pending);
+        });
+        deleteButton.setDisable(true);
+        editButton.setDisable(true);
+        editButton.setOnAction(event -> {
+            MedicalExamination selected = table.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                openDonorExaminationEditor(selected);
+            }
+        });
 
-        toolbar.getChildren().addAll(addButton, deleteButton, labeledControl("Статус", status),
+        toolbar.getChildren().addAll(addButton, editButton, deleteButton, labeledControl("Статус", status),
                 labeledControl("Начальная дата", from), labeledControl("Конечная дата", to));
         box.getChildren().addAll(toolbar, table);
         refreshDonorData();
@@ -460,6 +562,7 @@ public class JavaFxApp extends Application {
         VBox box = new VBox(12);
         box.setPadding(new Insets(16));
         Button bookButton = new Button("Записаться на донацию");
+        donorDonationButton = bookButton;
         bookButton.getStyleClass().add("primary-button");
         Button cancelButton = new Button("Отменить запись");
         cancelButton.getStyleClass().add("warning-button");
@@ -468,6 +571,7 @@ public class JavaFxApp extends Application {
         statusFilter.setValue("Все");
         DatePicker from = new DatePicker();
         DatePicker to = new DatePicker();
+        constrainDateRange(from, to);
         TableView<DonationRequest> table = new TableView<>();
         TableColumn<DonationRequest, String> dateCol = new TableColumn<>("Дата заявки");
         dateCol.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().donationDate().format(DATE_FORMAT)));
@@ -506,7 +610,7 @@ public class JavaFxApp extends Application {
         table.setItems(requestRows);
         refreshDonorData();
         VBox.setVgrow(table, Priority.ALWAYS);
-        updateDonorActionButtons(bookButton, null);
+        updateDonorActionButtons(null, bookButton);
         cancelButton.setDisable(true);
         return box;
     }
@@ -530,6 +634,7 @@ public class JavaFxApp extends Application {
         resultFilter.setValue("Все");
         DatePicker from = new DatePicker();
         DatePicker to = new DatePicker();
+        constrainDateRange(from, to);
         resultFilter.valueProperty().addListener((obs, oldValue, newValue) ->
                 applyDonationFilter(table, newValue, from.getValue(), to.getValue(), null));
         from.valueProperty().addListener((obs, oldValue, newValue) ->
@@ -588,6 +693,7 @@ public class JavaFxApp extends Application {
         refreshDoctorData();
         VBox.setVgrow(table, Priority.ALWAYS);
         apply.run();
+        tableRefreshers.add(apply);
         return box;
     }
 
@@ -599,12 +705,13 @@ public class JavaFxApp extends Application {
         TextField filter = new TextField();
         filter.setPromptText("Поиск по имени или заключению");
         ComboBox<String> status = new ComboBox<>(FXCollections.observableArrayList(
-                "Все", "на рассмотрении", "допущен(а)", "не допущен(а)"));
+                "Все", "на рассмотрении", "допущен(а)", "не допущен(а)", "отменена"));
         status.setValue("Все");
         Button processButton = new Button("Обработать обследование");
         processButton.getStyleClass().add("primary-button");
         DatePicker from = new DatePicker();
         DatePicker to = new DatePicker();
+        constrainDateRange(from, to);
         ComboBox<String> sort = new ComboBox<>(FXCollections.observableArrayList("По дате", "По имени донора"));
         sort.setValue("По дате");
         toolbar.getChildren().addAll(processButton,
@@ -652,6 +759,7 @@ public class JavaFxApp extends Application {
         refreshDoctorData();
         VBox.setVgrow(table, Priority.ALWAYS);
         apply.run();
+        tableRefreshers.add(apply);
         return box;
     }
 
@@ -662,6 +770,7 @@ public class JavaFxApp extends Application {
         search.setPromptText("Поиск по имени или группе крови");
         DatePicker from = new DatePicker();
         DatePicker to = new DatePicker();
+        constrainDateRange(from, to);
         Button edit = new Button("Изменить заявку");
         edit.getStyleClass().add("primary-button");
         TableView<DonationRequest> table = new TableView<>();
@@ -689,9 +798,8 @@ public class JavaFxApp extends Application {
         to.valueProperty().addListener((o, a, b) -> apply.run());
         edit.setOnAction(event -> {
             DonationRequest selected = table.getSelectionModel().getSelectedItem();
-            if (selected == null || (!"created".equalsIgnoreCase(selected.status())
-                    && !"confirmed".equalsIgnoreCase(selected.status()))) {
-                showError("Изменение заявки", "Изменять можно только заявки со статусом «создано» или «принято».");
+            if (selected == null) {
+                showError("Изменение заявки", "Сначала выберите заявку.");
                 return;
             }
             openDoctorRequestEditor(selected);
@@ -703,6 +811,7 @@ public class JavaFxApp extends Application {
         refreshDoctorData();
         VBox.setVgrow(table, Priority.ALWAYS);
         apply.run();
+        tableRefreshers.add(apply);
         return box;
     }
 
@@ -720,6 +829,7 @@ public class JavaFxApp extends Application {
         typeFilter.setValue("Все");
         DatePicker from = new DatePicker();
         DatePicker to = new DatePicker();
+        constrainDateRange(from, to);
         ComboBox<String> sort = new ComboBox<>(FXCollections.observableArrayList("По дате"));
         sort.setValue("По дате");
         TableView<Donation> table = new TableView<>();
@@ -759,6 +869,7 @@ public class JavaFxApp extends Application {
         refreshDoctorData();
         VBox.setVgrow(table, Priority.ALWAYS);
         apply.run();
+        tableRefreshers.add(apply);
         return box;
     }
 
@@ -792,14 +903,16 @@ public class JavaFxApp extends Application {
         dialog.setTitle("Изменение заявки на донацию");
         dialog.initOwner(stage);
         ButtonType save = new ButtonType("Сохранить", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(save, ButtonType.CANCEL);
+        dialog.getDialogPane().getButtonTypes().addAll(
+                save, new ButtonType("Отмена", ButtonBar.ButtonData.CANCEL_CLOSE));
         GridPane grid = new GridPane();
         grid.setPadding(new Insets(16));
         grid.setHgap(10);
         grid.setVgap(10);
         DatePicker date = new DatePicker(request.donationDate());
-        ComboBox<String> status = new ComboBox<>(FXCollections.observableArrayList("created", "confirmed", "cancelled"));
-        status.setValue(request.status());
+        ComboBox<String> status = new ComboBox<>(FXCollections.observableArrayList(
+                "создано", "принято", "завершено", "отклонено"));
+        status.setValue(localizeRequestStatus(request.status()));
         grid.add(new Label("Дата донации"), 0, 0);
         grid.add(date, 1, 0);
         grid.add(new Label("Статус"), 0, 1);
@@ -813,7 +926,7 @@ public class JavaFxApp extends Application {
                 if (date.getValue() == null || date.getValue().isBefore(LocalDate.now())) {
                     throw new IllegalArgumentException("Дата донации должна быть сегодня или позже.");
                 }
-                requestRepository.update(request.id(), date.getValue(), status.getValue());
+                requestRepository.update(request.id(), date.getValue(), requestStatusValue(status.getValue()));
                 refreshDoctorData();
                 showInfo("Заявка обновлена", "Информация о заявке сохранена.");
                 return true;
@@ -830,9 +943,10 @@ public class JavaFxApp extends Application {
         dialog.setTitle("Результат донации");
         dialog.initOwner(stage);
         ButtonType save = new ButtonType("Сохранить", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(save, ButtonType.CANCEL);
-        ComboBox<String> result = new ComboBox<>(FXCollections.observableArrayList("successful", "unsuccessful"));
-        result.setValue(donation.result());
+        dialog.getDialogPane().getButtonTypes().addAll(
+                save, new ButtonType("Отмена", ButtonBar.ButtonData.CANCEL_CLOSE));
+        ComboBox<String> result = new ComboBox<>(FXCollections.observableArrayList("успешно", "отмена"));
+        result.setValue(localizeDonationResult(donation.result()));
         VBox content = new VBox(10, new Label("Результат донации"), result);
         content.setPadding(new Insets(16));
         dialog.getDialogPane().setContent(content);
@@ -841,7 +955,7 @@ public class JavaFxApp extends Application {
                 return null;
             }
             try {
-                donationRepository.updateResult(donation.id(), result.getValue());
+                donationRepository.updateResult(donation.id(), donationResultValue(result.getValue()));
                 refreshDoctorData();
                 showInfo("Результат обновлён", "Изменён только результат донации.");
                 return true;
@@ -870,14 +984,21 @@ public class JavaFxApp extends Application {
         exportCsv.setOnAction(event -> exportStatistics("csv", donorId));
         exportExcel.setOnAction(event -> exportStatistics("xlsx", donorId));
 
-        buildStatisticsContent(statsBox, donorId);
+        Label summary = new Label();
+        summary.setWrapText(true);
+        statsBox.getChildren().add(summary);
+        updateStatisticsLabel(summary, donorId);
+        statisticsRefreshers.add(() -> updateStatisticsLabel(summary, donorId));
         statsBox.getChildren().addAll(exportCsv, exportExcel);
         box.getChildren().addAll(title, statsBox);
-        refreshDoctorData();
         return box;
     }
 
-    private void buildStatisticsContent(VBox statsBox, Integer donorId) {
+    public VBox createStatisticsPane(Integer donorId) {
+        return buildStatisticsTab(donorId);
+    }
+
+    private void updateStatisticsLabel(Label summary, Integer donorId) {
         try {
             List<Donor> donors = donorId == null
                     ? donorRepository.findAll()
@@ -889,19 +1010,28 @@ public class JavaFxApp extends Application {
             long accepted = examinations.stream().filter(item -> "accepted".equalsIgnoreCase(item.admissionStatus())).count();
             long rejected = examinations.stream().filter(item -> "rejected".equalsIgnoreCase(item.admissionStatus())).count();
             long pending = examinations.stream().filter(item -> "pending".equalsIgnoreCase(item.admissionStatus())).count();
+            long cancelled = examinations.stream().filter(item -> "cancelled".equalsIgnoreCase(item.admissionStatus())).count();
             long bloodVolume = donations.stream().mapToLong(Donation::bloodVolume).sum();
+            long createdRequests = requests.stream().filter(item -> "created".equalsIgnoreCase(item.status())).count();
+            long confirmedRequests = requests.stream().filter(item -> "confirmed".equalsIgnoreCase(item.status())).count();
+            long completedRequests = requests.stream().filter(item -> "completed".equalsIgnoreCase(item.status())).count();
+            long cancelledRequests = requests.stream().filter(item -> "cancelled".equalsIgnoreCase(item.status())).count();
 
-            Label summary = new Label(
-                    "Доноры: " + donors.size() + "\n" +
-                            "Заявки: " + requests.size() + "\n" +
+            String donorLine = donorId == null ? "Доноры: " + donors.size() + "\n" : "";
+            summary.setText(
+                            donorLine +
+                            "Все заявки на донации: " + requests.size() + "\n" +
+                            "Заявки со статусом «создано»: " + createdRequests + "\n" +
+                            "Заявки со статусом «принято»: " + confirmedRequests + "\n" +
+                            "Заявки со статусом «завершено»: " + completedRequests + "\n" +
+                            "Заявки со статусом «отклонено»: " + cancelledRequests + "\n" +
                             "Обследования: " + examinations.size() + "\n" +
                             "Подтверждённых: " + accepted + "\n" +
                             "Отклонённых: " + rejected + "\n" +
                             "В ожидании: " + pending + "\n" +
+                            "Отменённых: " + cancelled + "\n" +
                             "Донации: " + donations.size() + "\n" +
                             "Всего перелито крови: " + bloodVolume + " мл");
-            summary.setWrapText(true);
-            statsBox.getChildren().add(summary);
         } catch (SQLException exception) {
             showError("Ошибка статистики", exception.getMessage());
         }
@@ -912,7 +1042,8 @@ public class JavaFxApp extends Application {
         dialog.setTitle("Изменение профиля");
         dialog.initOwner(stage);
         ButtonType saveType = new ButtonType("Сохранить", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(saveType, ButtonType.CANCEL);
+        dialog.getDialogPane().getButtonTypes().addAll(
+                saveType, new ButtonType("Отмена", ButtonBar.ButtonData.CANCEL_CLOSE));
 
         GridPane grid = new GridPane();
         grid.setPadding(new Insets(16));
@@ -952,25 +1083,94 @@ public class JavaFxApp extends Application {
         showMainScene();
     }
 
+    private void openDonorExaminationEditor(MedicalExamination examination) {
+        try {
+            DonationRequest request = requestRepository.findById(examination.requestId());
+            if (request == null) {
+                showError("Изменение обследования", "Заявка на донацию не найдена.");
+                return;
+            }
+            LocalDate minimumDate = request.donationDate();
+            DatePicker datePicker = new DatePicker(examination.examinationDate());
+            datePicker.setDayCellFactory(picker -> new DateCell() {
+                @Override
+                public void updateItem(LocalDate item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setDisable(!empty && item != null && item.isBefore(minimumDate));
+                }
+            });
+
+            Dialog<Boolean> dialog = new Dialog<>();
+            dialog.setTitle("Изменение обследования");
+            dialog.initOwner(stage);
+            ButtonType save = new ButtonType("Сохранить", ButtonBar.ButtonData.OK_DONE);
+            dialog.getDialogPane().getButtonTypes().addAll(
+                    save, new ButtonType("Отмена", ButtonBar.ButtonData.CANCEL_CLOSE));
+            GridPane grid = new GridPane();
+            grid.setPadding(new Insets(16));
+            grid.setHgap(12);
+            grid.setVgap(10);
+            grid.add(new Label("Дата обследования"), 0, 0);
+            grid.add(datePicker, 1, 0);
+            dialog.getDialogPane().setContent(grid);
+            dialog.setResultConverter(button -> {
+                if (button != save) {
+                    return null;
+                }
+                try {
+                    examinationService.updateDateForDonor(
+                            examination.id(), currentUser, datePicker.getValue());
+                    return true;
+                } catch (BusinessException | SQLException exception) {
+                    showError("Ошибка изменения обследования", exception.getMessage());
+                    return null;
+                }
+            });
+            dialog.showAndWait().ifPresent(saved -> {
+                if (saved) {
+                    refreshDonorData();
+                    showInfo("Изменение обследования", "Дата обследования изменена.");
+                }
+            });
+        } catch (SQLException exception) {
+            showError("Ошибка изменения обследования", exception.getMessage());
+        }
+    }
+
     private void openExaminationBookingDialog() {
         Dialog<DonationRequest> dialog = new Dialog<>();
         dialog.setTitle("Запись на медицинское обследование");
         dialog.initOwner(stage);
         ButtonType saveType = new ButtonType("Сохранить", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(saveType, ButtonType.CANCEL);
+        dialog.getDialogPane().getButtonTypes().addAll(
+                saveType, new ButtonType("Отмена", ButtonBar.ButtonData.CANCEL_CLOSE));
 
         GridPane grid = new GridPane();
         grid.setPadding(new Insets(16));
         grid.setHgap(12);
         grid.setVgap(10);
 
-        DatePicker datePicker = new DatePicker(LocalDate.now());
-        TextField hemoglobinField = new TextField();
-        hemoglobinField.setPromptText("например, 140.00");
+        List<MedicalExamination> existingExaminations = examinationRows.stream().toList();
+        DonationRequest availableRequest = requestRows.stream()
+                .filter(item -> "created".equalsIgnoreCase(item.status()))
+                .filter(item -> existingExaminations.stream()
+                        .filter(examination -> examination.requestId() == item.id())
+                        .allMatch(examination ->
+                                "cancelled".equalsIgnoreCase(examination.admissionStatus())))
+                .findFirst()
+                .orElse(null);
+        LocalDate minimumDate = availableRequest == null
+                ? LocalDate.now() : availableRequest.donationDate();
+        DatePicker datePicker = new DatePicker(
+                LocalDate.now().isBefore(minimumDate) ? minimumDate : LocalDate.now());
+        datePicker.setDayCellFactory(picker -> {
+            DateCell cell = new DateCell();
+            cell.itemProperty().addListener((observable, oldValue, value) ->
+                    cell.setDisable(value != null && value.isBefore(minimumDate)));
+            return cell;
+        });
         grid.add(new Label("Дата обследования"), 0, 0);
         grid.add(datePicker, 1, 0);
-        grid.add(new Label("Гемоглобин"), 0, 1);
-        grid.add(hemoglobinField, 1, 1);
         dialog.getDialogPane().setContent(grid);
 
         dialog.setResultConverter(buttonType -> {
@@ -978,11 +1178,12 @@ public class JavaFxApp extends Application {
                 return null;
             }
             try {
-                BigDecimal hemoglobin = new BigDecimal(hemoglobinField.getText().trim());
                 List<MedicalExamination> existing = examinationRepository.findByDonor(currentUser.id());
                 List<DonationRequest> active = requestRepository.findByDonor(currentUser.id()).stream()
                         .filter(r -> "created".equalsIgnoreCase(r.status()))
-                        .filter(r -> existing.stream().noneMatch(e -> e.requestId() == r.id()))
+                        .filter(r -> existing.stream()
+                                .filter(e -> e.requestId() == r.id())
+                                .allMatch(e -> "cancelled".equalsIgnoreCase(e.admissionStatus())))
                         .toList();
                 if (active.isEmpty()) {
                     showError("Запись на обследование",
@@ -990,14 +1191,15 @@ public class JavaFxApp extends Application {
                     return null;
                 }
                 DonationRequest request = active.get(0);
-                examinationRepository.create(request.id(), datePicker.getValue(), hemoglobin);
-                requestRepository.updateStatus(request.id(), "confirmed");
+                if (datePicker.getValue().isBefore(request.donationDate())) {
+                    showError("Ошибка даты",
+                            "Дата обследования не может быть раньше даты записи на донацию.");
+                    return null;
+                }
+                donationService.bookExamination(currentUser, datePicker.getValue());
                 showInfo("Успешно", "Запись на обследование создана.");
                 return request;
-            } catch (NumberFormatException exception) {
-                showError("Ошибка валидации", "Гемоглобин должен быть числом.");
-                return null;
-            } catch (SQLException exception) {
+            } catch (BusinessException | SQLException exception) {
                 showError("Ошибка записи", exception.getMessage());
                 return null;
             }
@@ -1011,7 +1213,8 @@ public class JavaFxApp extends Application {
         dialog.setTitle("Запись на донацию");
         dialog.initOwner(stage);
         ButtonType saveType = new ButtonType("Записать", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(saveType, ButtonType.CANCEL);
+        dialog.getDialogPane().getButtonTypes().addAll(
+                saveType, new ButtonType("Отмена", ButtonBar.ButtonData.CANCEL_CLOSE));
 
         GridPane grid = new GridPane();
         grid.setPadding(new Insets(16));
@@ -1044,7 +1247,8 @@ public class JavaFxApp extends Application {
         dialog.setTitle("Результат обследования");
         dialog.initOwner(stage);
         ButtonType saveType = new ButtonType("Сохранить", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(saveType, ButtonType.CANCEL);
+        dialog.getDialogPane().getButtonTypes().addAll(
+                saveType, new ButtonType("Отмена", ButtonBar.ButtonData.CANCEL_CLOSE));
 
         GridPane grid = new GridPane();
         grid.setPadding(new Insets(16));
@@ -1055,8 +1259,9 @@ public class JavaFxApp extends Application {
         hemoglobinField.setPromptText("140.00");
         TextField pressureField = new TextField(examination.bloodPressure() == null ? "" : examination.bloodPressure());
         TextArea conclusionArea = new TextArea(examination.conclusion() == null ? "" : examination.conclusion());
-        ComboBox<String> statusBox = new ComboBox<>(FXCollections.observableArrayList("accepted", "rejected"));
-        statusBox.setValue("accepted");
+        ComboBox<String> statusBox = new ComboBox<>(FXCollections.observableArrayList(
+                "допущен(а)", "не допущен(а)"));
+        statusBox.setValue("допущен(а)");
 
         grid.add(new Label("Гемоглобин"), 0, 0);
         grid.add(hemoglobinField, 1, 0);
@@ -1075,7 +1280,8 @@ public class JavaFxApp extends Application {
             try {
                 BigDecimal value = new BigDecimal(hemoglobinField.getText().trim());
                 examinationService.updateResultForDoctor(
-                        examination.id(), value, pressureField.getText().trim(), conclusionArea.getText().trim(), statusBox.getValue());
+                        examination.id(), value, pressureField.getText().trim(), conclusionArea.getText().trim(),
+                        examinationStatusValue(statusBox.getValue()));
                 showInfo("Результат сохранён", "Заключение по обследованию тщательно обработано.");
                 return true;
             } catch (NumberFormatException exception) {
@@ -1101,7 +1307,8 @@ public class JavaFxApp extends Application {
             dialog.setTitle("Обработка донации");
             dialog.initOwner(stage);
             ButtonType saveType = new ButtonType("Сохранить", ButtonBar.ButtonData.OK_DONE);
-            dialog.getDialogPane().getButtonTypes().addAll(saveType, ButtonType.CANCEL);
+            dialog.getDialogPane().getButtonTypes().addAll(
+                    saveType, new ButtonType("Отмена", ButtonBar.ButtonData.CANCEL_CLOSE));
 
             GridPane grid = new GridPane();
             grid.setPadding(new Insets(16));
@@ -1121,11 +1328,14 @@ public class JavaFxApp extends Application {
                     return null;
                 }
             });
-            ComboBox<BloodBatch> batchBox = new ComboBox<>(FXCollections.observableArrayList(batchRepository.findAll()));
+            ComboBox<BloodBatch> batchBox = new ComboBox<>(FXCollections.observableArrayList(
+                    batchRepository.findAll().stream()
+                            .filter(batch -> "available".equalsIgnoreCase(batch.status()))
+                            .toList()));
             ComboBox<String> typeBox = new ComboBox<>(FXCollections.observableArrayList("whole_blood", "plasma", "platelets"));
             typeBox.setValue("whole_blood");
-            ComboBox<String> resultBox = new ComboBox<>(FXCollections.observableArrayList("successful", "unsuccessful"));
-            resultBox.setValue("successful");
+            ComboBox<String> resultBox = new ComboBox<>(FXCollections.observableArrayList("успешно", "отмена"));
+            resultBox.setValue("успешно");
             Spinner<Integer> volumeSpinner = new Spinner<>(1, 450, 450);
 
             grid.add(new Label("Заявка"), 0, 0);
@@ -1164,7 +1374,8 @@ public class JavaFxApp extends Application {
                         showError("Ошибка донации", "Для заявки не найдено обследование.");
                         return false;
                     }
-                    donationService.process(request, exam, batch, volumeSpinner.getValue(), typeBox.getValue(), resultBox.getValue(), donor);
+                    donationService.process(request, exam, batch, volumeSpinner.getValue(), typeBox.getValue(),
+                            donationResultValue(resultBox.getValue()), donor);
                     showInfo("Успешно", "Донация оформлена и связана с партией крови.");
                     refreshDoctorData();
                     return true;
@@ -1186,6 +1397,9 @@ public class JavaFxApp extends Application {
             requestRows.setAll(requestRepository.findByDonor(currentUser.id()));
             examinationRows.setAll(examinationRepository.findByDonor(currentUser.id()));
             donationRows.setAll(donationRepository.findByDonor(currentUser.id()));
+            tableRefreshers.forEach(Runnable::run);
+            updateDonorActionButtons(donorExaminationButton, donorDonationButton);
+            refreshStatistics();
         } catch (SQLException exception) {
             showError("Ошибка обновления данных", exception.getMessage());
         }
@@ -1196,9 +1410,17 @@ public class JavaFxApp extends Application {
                 List<DonationRequest> requests = requestRepository.findByDonor(currentUser.id());
                 boolean hasActiveRequest = requests.stream().anyMatch(r ->
                         "created".equalsIgnoreCase(r.status()) || "confirmed".equalsIgnoreCase(r.status()));
-                boolean canExamine = requests.stream()
-                        .filter(r -> "created".equalsIgnoreCase(r.status()))
-                        .anyMatch(r -> examinationRows.stream().noneMatch(e -> e.requestId() == r.id()));
+                boolean hasPendingExamination = examinationRows.stream()
+                        .anyMatch(examination -> "pending".equalsIgnoreCase(examination.admissionStatus()));
+                boolean canExamine = !hasPendingExamination && requests.stream()
+                        .anyMatch(r -> ("created".equalsIgnoreCase(r.status())
+                                && examinationRows.stream().noneMatch(e ->
+                                e.requestId() == r.id()
+                                        && !"cancelled".equalsIgnoreCase(e.admissionStatus())))
+                                || ("confirmed".equalsIgnoreCase(r.status())
+                                && examinationRows.stream().anyMatch(e ->
+                                e.requestId() == r.id()
+                                        && "cancelled".equalsIgnoreCase(e.admissionStatus()))));
                 if (examinationButton != null) {
                     examinationButton.setDisable(!canExamine);
                 }
@@ -1217,9 +1439,15 @@ public class JavaFxApp extends Application {
             examinationRows.setAll(examinationRepository.findAll());
             donationRows.setAll(donationRepository.findAll());
             batchRows.setAll(batchRepository.findAll());
+            tableRefreshers.forEach(Runnable::run);
+            refreshStatistics();
         } catch (SQLException exception) {
             showError("Ошибка обновления данных", exception.getMessage());
         }
+    }
+
+    private void refreshStatistics() {
+        statisticsRefreshers.forEach(Runnable::run);
     }
 
     private void applyExaminationFilter(TableView<MedicalExamination> table, String statusValue,
@@ -1278,11 +1506,70 @@ public class JavaFxApp extends Application {
                 && (to == null || !value.isAfter(to));
     }
 
+    private void constrainDateRange(DatePicker from, DatePicker to) {
+        // Install each cell factory once. Replacing it while the calendar popup is
+        // open can leave DatePickerBehavior with a disposed popup in JavaFX 21.
+        to.setDayCellFactory(picker -> new DateCell() {
+            @Override
+            public void updateItem(LocalDate item, boolean empty) {
+                super.updateItem(item, empty);
+                LocalDate start = from.getValue();
+                setDisable(!empty && start != null && item != null && item.isBefore(start));
+            }
+        });
+        from.setDayCellFactory(picker -> new DateCell() {
+            @Override
+            public void updateItem(LocalDate item, boolean empty) {
+                super.updateItem(item, empty);
+                LocalDate end = to.getValue();
+                setDisable(!empty && end != null && item != null && item.isAfter(end));
+            }
+        });
+
+        from.valueProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null && to.getValue() != null && to.getValue().isBefore(newValue)) {
+                to.setValue(newValue);
+            }
+        });
+        to.valueProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null && from.getValue() != null && from.getValue().isAfter(newValue)) {
+                from.setValue(newValue);
+            }
+        });
+    }
+
     private String localizeExaminationStatus(String value) {
         return switch (value == null ? "" : value.toLowerCase()) {
             case "pending" -> "на рассмотрении";
             case "accepted" -> "допущен(а)";
             case "rejected" -> "не допущен(а)";
+            case "cancelled" -> "отменена";
+            default -> value;
+        };
+    }
+
+    private String examinationStatusValue(String value) {
+        return switch (value) {
+            case "допущен(а)" -> "accepted";
+            case "не допущен(а)" -> "rejected";
+            default -> value;
+        };
+    }
+
+    private String requestStatusValue(String value) {
+        return switch (value) {
+            case "создано" -> "created";
+            case "принято" -> "confirmed";
+            case "завершено" -> "completed";
+            case "отклонено" -> "cancelled";
+            default -> value;
+        };
+    }
+
+    private String donationResultValue(String value) {
+        return switch (value) {
+            case "успешно" -> "successful";
+            case "отмена" -> "unsuccessful";
             default -> value;
         };
     }
@@ -1342,7 +1629,8 @@ public class JavaFxApp extends Application {
     }
 
     private void confirmDelete(Runnable action, String message) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, message, ButtonType.OK, ButtonType.CANCEL);
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, message, ButtonType.OK,
+                new ButtonType("Отмена", ButtonBar.ButtonData.CANCEL_CLOSE));
         alert.initOwner(stage);
         alert.showAndWait().ifPresent(button -> {
             if (button == ButtonType.OK) {
@@ -1373,10 +1661,23 @@ public class JavaFxApp extends Application {
         try {
             List<List<String>> rows = new ArrayList<>();
             rows.add(List.of("Параметр", "Значение"));
-            rows.add(List.of("Доноры", String.valueOf(donorRepository.findAll().size())));
-            rows.add(List.of("Заявки", String.valueOf(donorId == null ? requestRepository.findAll().size() : requestRepository.findByDonor(donorId).size())));
+            if (donorId == null) {
+                rows.add(List.of("Доноры", String.valueOf(donorRepository.findAll().size())));
+            }
+            List<DonationRequest> requests = donorId == null
+                    ? requestRepository.findAll() : requestRepository.findByDonor(donorId);
+            rows.add(List.of("Все заявки на донации", String.valueOf(requests.size())));
+            rows.add(List.of("Заявки: создано", String.valueOf(requests.stream().filter(r -> "created".equalsIgnoreCase(r.status())).count())));
+            rows.add(List.of("Заявки: принято", String.valueOf(requests.stream().filter(r -> "confirmed".equalsIgnoreCase(r.status())).count())));
+            rows.add(List.of("Заявки: завершено", String.valueOf(requests.stream().filter(r -> "completed".equalsIgnoreCase(r.status())).count())));
+            rows.add(List.of("Заявки: отклонено", String.valueOf(requests.stream().filter(r -> "cancelled".equalsIgnoreCase(r.status())).count())));
             rows.add(List.of("Обследования", String.valueOf(donorId == null ? examinationRepository.findAll().size() : examinationRepository.findByDonor(donorId).size())));
             rows.add(List.of("Донации", String.valueOf(donorId == null ? donationRepository.findAll().size() : donationRepository.findByDonor(donorId).size())));
+            List<MedicalExamination> examinations = donorId == null
+                    ? examinationRepository.findAll() : examinationRepository.findByDonor(donorId);
+            rows.add(List.of("Обследования: отменено",
+                    String.valueOf(examinations.stream()
+                            .filter(e -> "cancelled".equalsIgnoreCase(e.admissionStatus())).count())));
             var file = ExcelExporter.export(rows, "statistics", format.equals("csv") ? "1" : "2");
             if (file != null) {
                 showInfo("Экспорт", "Файл успешно сохранён: " + file.toString());

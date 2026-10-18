@@ -1,9 +1,6 @@
 package ru.mirea.project.util;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -21,6 +18,7 @@ public final class DatabaseInitializer {
             }
             migrateDonorAge(connection);
             migrateDonorPhone(connection);
+            migrateAdmissionStatus(connection);
         }
     }
 
@@ -60,21 +58,14 @@ public final class DatabaseInitializer {
     }
 
     private static String readSchemaScript() throws SQLException {
-        Path[] candidates = {
-                Path.of("sql_script", "blood_donor.sql"),
-                Path.of("..", "sql_script", "blood_donor.sql")
-        };
-        for (Path candidate : candidates) {
-            if (Files.isRegularFile(candidate)) {
-                try {
-                    return Files.readString(candidate, StandardCharsets.UTF_8);
-                } catch (IOException exception) {
-                    throw new SQLException("Не удалось прочитать SQL-схему: " + candidate, exception);
-                }
+        try (var stream = DatabaseInitializer.class.getResourceAsStream("/blood_donor.sql")) {
+            if (stream == null) {
+                throw new SQLException("Ресурс /blood_donor.sql не найден в classpath.");
             }
+            return new String(stream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        } catch (IOException exception) {
+            throw new SQLException("Не удалось прочитать SQL-схему из classpath.", exception);
         }
-        throw new SQLException(
-                "Не найден файл sql_script/blood_donor.sql. Запустите приложение из корня проекта или каталога bloodcenter.");
     }
 
     private static String[] splitStatements(String script) {
@@ -117,6 +108,25 @@ public final class DatabaseInitializer {
             try (Statement statement = connection.createStatement()) {
                 statement.execute("ALTER TABLE donor DROP COLUMN phone");
             }
+        }
+    }
+
+    private static void migrateAdmissionStatus(Connection connection) throws SQLException {
+        try (var check = connection.prepareStatement("""
+                SELECT EXISTS (
+                    SELECT 1 FROM pg_enum
+                    WHERE enumtypid='public.admission_status'::regtype
+                      AND enumlabel='cancelled'
+                )
+                """);
+                var rows = check.executeQuery()) {
+            rows.next();
+            if (rows.getBoolean(1)) {
+                return;
+            }
+        }
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("ALTER TYPE admission_status ADD VALUE 'cancelled'");
         }
     }
 
