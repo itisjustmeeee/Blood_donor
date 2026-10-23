@@ -136,6 +136,11 @@ public class JavaFxApp extends Application {
         }
     }
 
+    public void logout() {
+        currentUser = null;
+        showLoginScene();
+    }
+
     private void showLegacyLoginScene() {
         VBox root = new VBox(18);
         root.setPadding(new Insets(28));
@@ -377,6 +382,9 @@ public class JavaFxApp extends Application {
     public TabPane buildDoctorTabs() {
         TabPane tabs = new TabPane();
 
+        Tab profileTab = new Tab("Профиль");
+        profileTab.setContent(scrollable(buildDoctorProfileTab()));
+
         Tab donorTab = new Tab("Доноры");
         donorTab.setContent(scrollable(buildDonorTableTab()));
 
@@ -395,7 +403,7 @@ public class JavaFxApp extends Application {
         Tab statsTab = new Tab("Статистика");
         statsTab.setContent(scrollable(new StatisticsPane(this, null).create()));
 
-        tabs.getTabs().addAll(donorTab, examTab, requestTab, donationTab, batchTab, statsTab);
+        tabs.getTabs().addAll(profileTab, donorTab, examTab, requestTab, donationTab, batchTab, statsTab);
         return tabs;
     }
 
@@ -472,6 +480,27 @@ public class JavaFxApp extends Application {
         });
 
         box.getChildren().addAll(title, info, updateButton, logoutButton);
+        return box;
+    }
+
+    private VBox buildDoctorProfileTab() {
+        VBox box = new VBox(16);
+        box.setPadding(new Insets(18));
+
+        Label title = new Label("Профиль врача");
+        title.getStyleClass().add("section-title");
+
+        Label info = new Label(String.format(
+                "ФИО: %s%nВозраст: %d%nПол: %s%nEmail: %s%nРоль: врач",
+                currentUser.fullName(), currentUser.age(), localizeGender(currentUser.gender()),
+                currentUser.email()));
+        info.setWrapText(true);
+
+        Button logoutButton = new Button("Выйти из профиля");
+        logoutButton.getStyleClass().add("secondary-button");
+        logoutButton.setOnAction(event -> logout());
+
+        box.getChildren().addAll(title, info, logoutButton);
         return box;
     }
 
