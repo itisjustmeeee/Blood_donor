@@ -17,6 +17,6 @@ public final class MainController {
 
     @FXML
     private void logout() {
-        application.showLoginScene();
+        application.logout();
     }
 }

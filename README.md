@@ -1,7 +1,7 @@
-# Blood donor console application
+# Blood donor application
 
 Рабочее консольное приложение находится в каталоге `bloodcenter`.<br>
-Оно использует пакетную структуру `ru.mirea.project`, PostgreSQL через JDBC и таблицы из `sql_script/blood_donor.sql`.
+Оно использует пакетную структуру `ru.mirea.project`, PostgreSQL через JDBC и таблицы из classpath-ресурса `blood_donor.sql`.
 
 ## Подготовка базы данных
 
@@ -17,7 +17,7 @@
 
 3. Запустите приложение:
 
-- оно прочитает схему из `sql_script/blood_donor.sql` и создаст базу при наличии права `CREATEDB`.
+- оно прочитает схему из classpath-ресурса `blood_donor.sql` и создаст базу при наличии права `CREATEDB`.
 
 Например, в PowerShell перед запуском:
 
@@ -45,7 +45,28 @@ ALTER USER blood_app CREATEDB;
 
 После этого укажите `blood_app` и его пароль в `BLOOD_DB_USER` и `BLOOD_DB_PASSWORD`.
 
-## Запуск
+## Запуск JavaFX-приложения
+
+Из каталога `bloodcenter` настройте `src/main/resources/database.properties`:
+
+```properties
+db.url=jdbc:postgresql://localhost:5432/blood_donor
+db.user=postgres
+db.password=пароль_postgresql
+```
+
+Запустите приложение:
+
+```powershell
+mvn clean javafx:run
+```
+
+При запуске отображается окно загрузки, а подключение к PostgreSQL, создание
+схемы и добавление тестовых данных выполняются в фоновом потоке. После этого
+открывается FXML-окно входа. Самостоятельная регистрация доступна только
+донорам, учётные записи врачей создаются заранее.
+
+## Запуск консольного приложения
 
 Из каталога `bloodcenter`:
 
@@ -55,7 +76,7 @@ mvn exec:java
 ```
 
 При запуске приложение проверяет наличие базы `blood_donor` в PostgreSQL.<br>
-Если базы нет, она создаётся автоматически, после чего инициализатор читает типы, таблицы и начальные партии из `sql_script/blood_donor.sql`.<br>
+Если базы нет, она создаётся автоматически, после чего Инициализатор читает типы, таблицы и начальные партии из classpath-ресурса `blood_donor.sql`.<br>
 При повторном запуске существующая база и схема не создаются заново.
 
 Если в терминале IntelliJ IDEA русские символы отображаются как `����`, проверьте настройку **Settings | Editor | General | Console | Default Encoding**: должно быть выбрано `UTF-8`.<br>

@@ -12,7 +12,8 @@ CREATE TYPE gender AS ENUM (
 CREATE TYPE admission_status AS ENUM (
 	'pending',
 	'accepted',
-	'rejected'
+	'rejected',
+	'cancelled'
 );
 
 CREATE TYPE request_status AS ENUM (
